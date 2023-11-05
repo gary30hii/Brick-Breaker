@@ -9,24 +9,23 @@ import javafx.scene.shape.Rectangle;
 import java.io.Serializable;
 
 public class Block implements Serializable {
-    private static Block block = new Block(-1, -1, Color.TRANSPARENT, 99);
+    private static final Block block = new Block(-1, -1, Color.TRANSPARENT, 99);
 
     public int row;
     public int column;
 
-
     public boolean isDestroyed = false;
 
-    private Color color;
+    private final Color color;
     public int type;
 
     public int x;
     public int y;
 
-    private int width = 100;
-    private int height = 30;
-    private int paddingTop = height * 2;
-    private int paddingH = 50;
+    private final int width = 100;
+    private final int height = 30;
+    private final int paddingTop = height * 2;
+    private final int paddingH = 50;
     public Rectangle rect;
 
 
@@ -51,6 +50,7 @@ public class Block implements Serializable {
         draw();
     }
 
+    //Draws the block based on its position and type.
     private void draw() {
         x = (column * width) + paddingH;
         y = (row * height) + paddingTop;
@@ -79,7 +79,12 @@ public class Block implements Serializable {
 
     }
 
-
+    /**
+     * Checks if the ball hits the block and returns the hit direction.
+     * @param xBall The x-coordinate of the ball.
+     * @param yBall The y-coordinate of the ball.
+     * @return The hit direction: HIT_BOTTOM, HIT_TOP, HIT_RIGHT, HIT_LEFT, or NO_HIT.
+     */
     public int checkHitToBlock(double xBall, double yBall) {
 
         if (isDestroyed) {
