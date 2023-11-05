@@ -16,22 +16,22 @@ public class Score {
         label.setTranslateX(x);
         label.setTranslateY(y);
 
-        // Update the UI on the JavaFX application thread.
-        Platform.runLater(() -> main.root.getChildren().add(label));
-
-        // Animate the label's appearance.
-        new Thread(() -> {
-            for (int i = 0; i < 21; i++) {
-                try {
-                    label.setScaleX(i);
-                    label.setScaleY(i);
-                    label.setOpacity((20 - i) / 20.0);
-                    Thread.sleep(15);
-                } catch (InterruptedException e) {
-                    System.err.println("Exception occurred: " + e.getMessage());
+        Platform.runLater(() -> {
+            main.root.getChildren().add(label);
+            // Animate the label's appearance
+            new Thread(() -> {
+                for (int i = 0; i < 21; i++) {
+                    try {
+                        label.setScaleX(i);
+                        label.setScaleY(i);
+                        label.setOpacity((20 - i) / 20.0);
+                        Thread.sleep(15);
+                    } catch (InterruptedException e) {
+                        System.err.println("Exception occurred: " + e.getMessage());
+                    }
                 }
-            }
-        }).start();
+            }).start();
+        });
     }
 
     // Display a message with animation at a fixed position.

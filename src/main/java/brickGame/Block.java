@@ -85,30 +85,48 @@ public class Block implements Serializable {
      * @param yBall The y-coordinate of the ball.
      * @return The hit direction: HIT_BOTTOM, HIT_TOP, HIT_RIGHT, HIT_LEFT, or NO_HIT.
      */
-    public int checkHitToBlock(double xBall, double yBall) {
-
+    public int checkHitToBlock(double xBall, double yBall, double ballRadius) {
         if (isDestroyed) {
             return NO_HIT;
         }
 
-        if (xBall >= x && xBall <= x + width && yBall == y + height) {
-            return HIT_BOTTOM;
-        }
+        double ballCenterX = xBall + ballRadius;
+        double ballCenterY = yBall + ballRadius;
+        double blockCenterX = x + ((double) width / 2);
+        double blockCenterY = y + ((double) height / 2);
 
-        if (xBall >= x && xBall <= x + width && yBall == y) {
-            return HIT_TOP;
-        }
+        double dx = ballCenterX - blockCenterX;
+        double dy = ballCenterY - blockCenterY;
 
-        if (yBall >= y && yBall <= y + height && xBall == x + width) {
-            return HIT_RIGHT;
-        }
+        double combinedHalfWidths = (ballRadius + width) / 2;
+        double combinedHalfHeights = (ballRadius + height) / 2;
 
-        if (yBall >= y && yBall <= y + height && xBall == x) {
-            return HIT_LEFT;
+        if (Math.abs(dx) <= combinedHalfWidths && Math.abs(dy) <= combinedHalfHeights) {
+            double overlapX = combinedHalfWidths - Math.abs(dx);
+            double overlapY = combinedHalfHeights - Math.abs(dy);
+
+            if (overlapX >= overlapY) {
+                if (dy > 0) {
+                    System.out.println("bottom");
+                    return HIT_BOTTOM; // Ball hit the bottom of the block.
+                } else {
+                    System.out.println("top");
+                    return HIT_TOP; // Ball hit the top of the block.
+                }
+            } else {
+                if (dx > 0) {
+                    System.out.println("right");
+                    return HIT_RIGHT; // Ball hit the right side of the block.
+                } else {
+                    System.out.println("left");
+                    return HIT_LEFT; // Ball hit the left side of the block.
+                }
+            }
         }
 
         return NO_HIT;
     }
+
 
     public static int getPaddingTop() {
         return block.paddingTop;
