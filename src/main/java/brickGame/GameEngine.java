@@ -26,12 +26,14 @@ public class GameEngine {
     //A method that manages the game's update loop. It repeatedly calls the onUpdate method provided by the callback object. This method is executed on a separate thread.
     private synchronized void Update() {
         updateThread = new Thread(() -> {
-            while (!updateThread.isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     onAction.onUpdate();
                     Thread.sleep(fps);
                 } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // Restore the interrupted status
                     System.err.println("Exception occurred: " + e.getMessage());
+                    break; // Exit the loop gracefully
                 }
             }
         });
@@ -46,31 +48,33 @@ public class GameEngine {
     //manages the physics calculation loop. It repeatedly calls the onPhysicsUpdate method provided by the callback object. This method is executed on a separate thread.
     private synchronized void PhysicsCalculation() {
         physicsThread = new Thread(() -> {
-            while (!physicsThread.isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     onAction.onPhysicsUpdate();
                     Thread.sleep(fps);
                 } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // Restore the interrupted status
                     System.err.println("Exception occurred: " + e.getMessage());
+                    break; // Exit the loop gracefully
                 }
             }
         });
-
         physicsThread.start();
-
     }
 
     //start the time-tracking thread, which increments the time variable and notifies the callback object of the elapsed time.
     private void TimeStart() {
         timeThread = new Thread(() -> {
-            try {
-                while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
                     time++;
                     onAction.onTime(time);
                     Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // Restore the interrupted status
+                    System.err.println("Exception occurred: " + e.getMessage());
+                    break; // Exit the loop gracefully
                 }
-            } catch (InterruptedException e) {
-                System.err.println("Exception occurred: " + e.getMessage());
             }
         });
         timeThread.start();
@@ -90,9 +94,9 @@ public class GameEngine {
     public void stop() {
         if (!isStopped) {
             isStopped = true;
-            updateThread.stop();
-            physicsThread.stop();
-            timeThread.stop();
+            updateThread.interrupt();
+            physicsThread.interrupt();
+            timeThread.interrupt();
         }
     }
 

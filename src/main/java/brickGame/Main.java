@@ -50,6 +50,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private double v = 1.000;
 
     private int heart = 3;
+    // Synchronize access to score
     private int score = 0;
     private long time = 0;
     private long hitTime = 0;
@@ -703,7 +704,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         }
 
         //System.out.println("time is:" + time + " goldTime is " + goldTime);
-
     }
 
 
