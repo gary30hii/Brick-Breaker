@@ -1,113 +1,114 @@
 package brickGame;
 
-
 public class GameEngine {
 
     private OnAction onAction;
-    private int fps = 15;
+    private volatile boolean isStopped = true;
+    private int frameDelay = 66; // Default for ~15 fps (1000ms / 15)
     private Thread updateThread;
     private Thread physicsThread;
     private Thread timeThread;
     private long time = 0;
-    public boolean isStopped = true;
 
-    //A setter method to set the callback object that implements the OnAction interface. This object will receive notifications when specific actions occur in the game engine.
+    public interface OnAction {
+        void onUpdate();
+        void onInit();
+        void onPhysicsUpdate();
+        void onTime(long time);
+    }
+
     public void setOnAction(OnAction onAction) {
         this.onAction = onAction;
     }
 
-    /**
-     * @param fps set fps and we convert it to millisecond
-     */
     public void setFps(int fps) {
-        this.fps = 1000 / fps;
+        if (fps <= 0) {
+            throw new IllegalArgumentException("FPS must be greater than zero");
+        }
+        this.frameDelay = 1000 / fps;
     }
 
-    //A method that manages the game's update loop. It repeatedly calls the onUpdate method provided by the callback object. This method is executed on a separate thread.
-    private synchronized void Update() {
+    private void update() {
         updateThread = new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!isStopped) {
                 try {
                     onAction.onUpdate();
-                    Thread.sleep(fps);
+                    Thread.sleep(frameDelay);
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt(); // Restore the interrupted status
-                    System.err.println("Exception occurred: " + e.getMessage());
-                    break; // Exit the loop gracefully
+                    if (isStopped) {
+                        break;
+                    }
+                    Thread.currentThread().interrupt();
                 }
             }
         });
         updateThread.start();
     }
 
-    //initializes the game by calling the onInit method provided by the callback object
-    private void Initialize() {
+    private void initialize() {
         onAction.onInit();
     }
 
-    //manages the physics calculation loop. It repeatedly calls the onPhysicsUpdate method provided by the callback object. This method is executed on a separate thread.
-    private synchronized void PhysicsCalculation() {
+    private void physicsCalculation() {
         physicsThread = new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!isStopped) {
                 try {
                     onAction.onPhysicsUpdate();
-                    Thread.sleep(fps);
+                    Thread.sleep(frameDelay);
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt(); // Restore the interrupted status
-                    System.err.println("Exception occurred: " + e.getMessage());
-                    break; // Exit the loop gracefully
+                    if (isStopped) {
+                        break;
+                    }
+                    Thread.currentThread().interrupt();
                 }
             }
         });
         physicsThread.start();
     }
 
-    //start the time-tracking thread, which increments the time variable and notifies the callback object of the elapsed time.
-    private void TimeStart() {
+    private void timeStart() {
         timeThread = new Thread(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!isStopped) {
                 try {
                     time++;
                     onAction.onTime(time);
                     Thread.sleep(1);
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt(); // Restore the interrupted status
-                    System.err.println("Exception occurred: " + e.getMessage());
-                    break; // Exit the loop gracefully
+                    if (isStopped) {
+                        break;
+                    }
+                    Thread.currentThread().interrupt();
                 }
             }
         });
         timeThread.start();
     }
 
-    //start the game engine. It calls the Initialize, Update, and PhysicsCalculation methods, as well as starts a time-tracking thread.
     public void start() {
-        time = 0;
-        Initialize();
-        Update();
-        PhysicsCalculation();
-        TimeStart();
+        if (!isStopped) {
+            return; // The game is already running
+        }
         isStopped = false;
+        time = 0;
+        initialize();
+        update();
+        physicsCalculation();
+        timeStart();
     }
 
-    //stop the game engine. It interrupts the update thread, physics thread, and time thread to halt the game's execution.
     public void stop() {
-        if (!isStopped) {
-            isStopped = true;
-            updateThread.interrupt();
-            physicsThread.interrupt();
-            timeThread.interrupt();
+        isStopped = true;
+
+        updateThread.interrupt();
+        physicsThread.interrupt();
+        timeThread.interrupt();
+
+        try {
+            updateThread.join();
+            physicsThread.join();
+            timeThread.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
-
-    public interface OnAction {
-        void onUpdate();
-
-        void onInit();
-
-        void onPhysicsUpdate();
-
-        void onTime(long time);
-    }
-
 }
