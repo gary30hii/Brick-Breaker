@@ -52,7 +52,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     private double v = 1.000;
 
-    private int heart = 3;
+    private int heart = 10;
     private int score = 0;
     private long time = 0;
     private long hitTime = 0;
@@ -92,7 +92,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     // Initialize the game and UI elements
     @Override
-    public void start(Stage primaryStage){
+    public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
 
         if (!loadFromSave) {
@@ -201,7 +201,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                     type = Block.BLOCK_NORMAL;
                 }
                 blocks.add(new Block(j, i, colors[r % (colors.length)], type));
-                System.out.println("colors " + r % (colors.length));
             }
         }
     }
@@ -265,7 +264,10 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private void initBall() {
         Random random = new Random();
         xBall = random.nextInt(sceneWidth) + 1;
-        yBall = random.nextInt(sceneHeight - 200) + ((level + 1) * Block.getHeight()) + 15;
+        // Ensure yBall is within acceptable limits
+        int minY = Block.getPaddingTop() + (level + 1) * Block.getHeight() + ballRadius;
+        int maxY = sceneHeight - ballRadius;
+        yBall = Math.max(minY, Math.min(random.nextInt(sceneHeight - 200) + minY, maxY));
         ball = new Circle();
         ball.setRadius(ballRadius);
         ball.setFill(new ImagePattern(new Image("ball.png")));
@@ -365,14 +367,11 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                     vX = Math.abs(relation);
                 } else if (Math.abs(relation) > 0.3 && Math.abs(relation) <= 0.7) {
                     vX = (Math.abs(relation) * 1.5) + (level / 3.500);
-                    System.out.println("vX " + vX);
                 } else {
                     vX = (Math.abs(relation) * 2) + (level / 3.500);
-                    System.out.println("vX " + vX);
                 }
 
                 collideToBreakAndMoveToRight = xBall - centerBreakX > 0;
-                System.out.println("Collide2");
             }
         }
 
@@ -421,16 +420,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         }
 
 
-    }
-
-    // Check if all blocks are destroyed
-    private void checkDestroyedCount() {
-        if (destroyedBlockCount == blocks.size()) {
-            //TODO win level todo...
-            //System.out.println("You Win");
-
-            nextLevel();
-        }
     }
 
     // Save the game state to a file
@@ -552,31 +541,110 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private void nextLevel() {
         Platform.runLater(() -> {
             try {
+                System.out.println("Entering nextLevel method");
                 // Reset variables for the next level
                 vX = 1.000;
-
                 engine.stop();
                 resetCollideFlags();
                 goDownBall = true;
-
                 isGoldStatus = false;
                 isExistHeartBlock = false;
-
-
                 hitTime = 0;
                 time = 0;
                 goldTime = 0;
-
-                engine.stop();
+//                engine.stop();
                 blocks.clear();
                 chocos.clear();
                 destroyedBlockCount = 0;
-                start(primaryStage);
 
+                // Call the initialization logic directly
+                initializeGame();
+                System.out.println("Level: " + level);
+
+                // Comment out the following line:
+                // start(primaryStage);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
+    }
+
+    // Extract common initialization logic into a separate method
+    private void initializeGame() {
+        // Add the initialization logic here
+        level++;
+        if (level > 1) {
+            new Score().showMessage("Level Up :)", this);
+        }
+        if (level == 18) {
+            new Score().showWin(this);
+            return;
+        }
+
+        initBall();
+        initBreak();
+        initBoard();
+
+        load = new Button("Load Game");
+        newGame = new Button("Start New Game");
+        load.setTranslateX(220);
+        load.setTranslateY(300);
+        newGame.setTranslateX(220);
+        newGame.setTranslateY(340);
+
+        root = new Pane();
+        scoreLabel = new Label("Score: " + score);
+        levelLabel = new Label("Level: " + level);
+        levelLabel.setTranslateY(20);
+        heartLabel = new Label("Heart : " + heart);
+        heartLabel.setTranslateX(sceneWidth - 70);
+        if (!loadFromSave) {
+            root.getChildren().addAll(rect, ball, scoreLabel, heartLabel, levelLabel, newGame);
+        } else {
+            root.getChildren().addAll(rect, ball, scoreLabel, heartLabel, levelLabel);
+        }
+        for (Block block : blocks) {
+            root.getChildren().add(block.rect);
+        }
+        Scene scene = new Scene(root, sceneWidth, sceneHeight);
+        scene.getStylesheets().add("style.css");
+        scene.setOnKeyPressed(this);
+
+        primaryStage.setTitle("Game");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+
+        if (!loadFromSave) {
+            if (level > 1 && level < 18) {
+                load.setVisible(false);
+                newGame.setVisible(false);
+                engine = new GameEngine();
+                engine.setOnAction(this);
+                engine.setFps(120);
+                engine.start();
+            }
+
+            load.setOnAction(event -> {
+                loadGame();
+                load.setVisible(false);
+                newGame.setVisible(false);
+            });
+
+            newGame.setOnAction(event -> {
+                engine = new GameEngine();
+                engine.setOnAction(Main.this);
+                engine.setFps(120);
+                engine.start();
+                load.setVisible(false);
+                newGame.setVisible(false);
+            });
+        } else {
+            engine = new GameEngine();
+            engine.setOnAction(this);
+            engine.setFps(120);
+            engine.start();
+            loadFromSave = false;
+        }
     }
 
     // Method to restart the game from the beginning
@@ -585,7 +653,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         try {
             // Reset game variables for a fresh start
             level = 0;
-            heart = 3;
+            heart = 10;
             score = 0;
             vX = 1.000;
             destroyedBlockCount = 0;
@@ -623,6 +691,11 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             for (Bonus choco : chocos) {
                 choco.choco.setY(choco.y);
             }
+
+            if (destroyedBlockCount == blocks.size()) {
+                System.out.println("All blocks destroyed. Calling nextLevel...");
+                nextLevel();
+            }
         });
 
 
@@ -650,7 +723,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                     if (block.type == Block.BLOCK_STAR) {
                         goldTime = time;
                         ball.setFill(new ImagePattern(new Image("goldball.png")));
-                        System.out.println("gold ball");
+//                        System.out.println("gold ball");
                         root.getStyleClass().add("goldRoot");
                         isGoldStatus = true;
                     }
@@ -685,9 +758,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     @Override
     public void onPhysicsUpdate() {
-        checkDestroyedCount();
         setPhysicsToBall();
-
 
         if (time - goldTime > 5000) {
             ball.setFill(new ImagePattern(new Image("ball.png")));
@@ -700,7 +771,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 continue;
             }
             if (choco.y >= yBreak && choco.y <= yBreak + breakHeight && choco.x >= xBreak && choco.x <= xBreak + breakWidth) {
-                System.out.println("You Got it and +3 score for you");
+//                System.out.println("You Got it and +3 score for you");
                 choco.taken = true;
                 choco.choco.setVisible(false);
                 score += 3;
