@@ -24,7 +24,7 @@ public class GameEngine {
         if (fps <= 0) {
             throw new IllegalArgumentException("FPS must be greater than zero");
         }
-        this.frameDelay = 500 / fps;
+        this.frameDelay = 120 / fps;
     }
 
     private void gameLoop() {

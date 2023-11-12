@@ -23,17 +23,14 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     // Game variables and constants
     private int level = 0;
-
-    private double xBreak = 0.0f;
-    private double centerBreakX;
-    private double yBreak = 640.0f;
-
     private final int breakWidth = 130;
     private final int breakHeight = 30;
     private final int halfBreakWidth = breakWidth / 2;
-
     private final int sceneWidth = 500;
     private final int sceneHeight = 700;
+    private double xBreak = (double)sceneWidth / 2 - (double)breakWidth / 2;
+    private double centerBreakX;
+    private double yBreak = 640.0f;
 
     private static final int LEFT = 1;
     private static final int RIGHT = 2;
@@ -45,22 +42,22 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private boolean isGoldStatus = false;
     private boolean isExistHeartBlock = false;
 
-    private Rectangle rect;
+    private Rectangle paddle;
     private final int ballRadius = 10;
 
     private int destroyedBlockCount = 0;
 
     private double v = 1.000;
 
-    private int heart = 10;
+    private int heart = 1000;
     private int score = 0;
     private long time = 0;
     private long hitTime = 0;
     private long goldTime = 0;
 
     private GameEngine engine;
-    public static String savePath = "D:/save/save.mdds";
-    public static String savePathDir = "D:/save/";
+    public static String savePath = "data/save.mdds";
+    public static String savePathDir = "data/";
 
     private final ArrayList<Block> blocks = new ArrayList<>();
     private final ArrayList<Bonus> chocos = new ArrayList<>();
@@ -90,9 +87,23 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     Button load = null;
     Button newGame = null;
 
+    private boolean goDownBall = true;
+    private boolean goRightBall = true;
+    private boolean collideToBreak = false;
+    private boolean collideToBreakAndMoveToRight = true;
+    private boolean collideToRightWall = false;
+    private boolean collideToLeftWall = false;
+    private boolean collideToRightBlock = false;
+    private boolean collideToBottomBlock = false;
+    private boolean collideToLeftBlock = false;
+    private boolean collideToTopBlock = false;
+
+    private double vX = 1.000;
+    private double vY = 1.000;
+
     // Initialize the game and UI elements
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage){
         this.primaryStage = primaryStage;
 
         if (!loadFromSave) {
@@ -125,9 +136,9 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         heartLabel = new Label("Heart : " + heart);
         heartLabel.setTranslateX(sceneWidth - 70);
         if (!loadFromSave) {
-            root.getChildren().addAll(rect, ball, scoreLabel, heartLabel, levelLabel, newGame);
+            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel, newGame);
         } else {
-            root.getChildren().addAll(rect, ball, scoreLabel, heartLabel, levelLabel);
+            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
         }
         for (Block block : blocks) {
             root.getChildren().add(block.rect);
@@ -136,7 +147,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         scene.getStylesheets().add("style.css");
         scene.setOnKeyPressed(this);
 
-        primaryStage.setTitle("Game");
+        primaryStage.setTitle("Brick Breaker");
         primaryStage.setScene(scene);
         primaryStage.show();
 
@@ -183,22 +194,22 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             for (int j = 0; j < level + 1; j++) {
                 int r = new Random().nextInt(500);
                 if (r % 5 == 0) {
-                    continue;
+                    continue; //empty block
                 }
                 int type;
                 if (r % 10 == 1) {
-                    type = Block.BLOCK_CHOCO;
+                    type = Block.BLOCK_CHOCO; // choco block
                 } else if (r % 10 == 2) {
                     if (!isExistHeartBlock) {
-                        type = Block.BLOCK_HEART;
+                        type = Block.BLOCK_HEART; // heart block
                         isExistHeartBlock = true;
                     } else {
-                        type = Block.BLOCK_NORMAL;
+                        type = Block.BLOCK_NORMAL; // normal block
                     }
                 } else if (r % 10 == 3) {
-                    type = Block.BLOCK_STAR;
+                    type = Block.BLOCK_STAR; // star block
                 } else {
-                    type = Block.BLOCK_NORMAL;
+                    type = Block.BLOCK_NORMAL; // normal block
                 }
                 blocks.add(new Block(j, i, colors[r % (colors.length)], type));
             }
@@ -221,7 +232,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 move(RIGHT);
                 break;
             case DOWN:
-                //setPhysicsToBall();
+//                setPhysicsToBall();
                 break;
             case S:
                 saveGame();
@@ -234,13 +245,13 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     // Move the paddle left or right
     private void move(final int direction) {
         new Thread(() -> {
-            int sleepTime = 4;
+            int sleepTime = 1;
             for (int i = 0; i < 30; i++) {
                 if (xBreak == (sceneWidth - breakWidth) && direction == RIGHT) {
-                    return;
+                    return; //paddle stop moving to the right when it touch the right wall
                 }
                 if (xBreak == 0 && direction == LEFT) {
-                    return;
+                    return; //paddle stop moving to the left when it touch the left wall
                 }
                 if (direction == RIGHT) {
                     xBreak++;
@@ -275,31 +286,16 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     // Initialize the paddle (break)
     private void initBreak() {
-        rect = new Rectangle();
-        rect.setWidth(breakWidth);
-        rect.setHeight(breakHeight);
-        rect.setX(xBreak);
-        rect.setY(yBreak);
+        paddle = new Rectangle();
+        paddle.setWidth(breakWidth);
+        paddle.setHeight(breakHeight);
+        paddle.setX(xBreak);
+        paddle.setY(yBreak);
 
         ImagePattern pattern = new ImagePattern(new Image("block.jpg"));
 
-        rect.setFill(pattern);
+        paddle.setFill(pattern);
     }
-
-
-    private boolean goDownBall = true;
-    private boolean goRightBall = true;
-    private boolean collideToBreak = false;
-    private boolean collideToBreakAndMoveToRight = true;
-    private boolean collideToRightWall = false;
-    private boolean collideToLeftWall = false;
-    private boolean collideToRightBlock = false;
-    private boolean collideToBottomBlock = false;
-    private boolean collideToLeftBlock = false;
-    private boolean collideToTopBlock = false;
-
-    private double vX = 1.000;
-    private double vY = 1.000;
 
     // Reset collision flags
     private void resetCollideFlags() {
@@ -338,6 +334,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             return;
         }
         if (yBall >= sceneHeight) {
+            resetCollideFlags();
             goDownBall = false;
             if (!isGoldStatus) {
                 //TODO game-over
@@ -392,17 +389,14 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         }
 
         //Wall Collide
-
         if (collideToRightWall) {
             goRightBall = false;
         }
-
         if (collideToLeftWall) {
             goRightBall = true;
         }
 
         //Block Collide
-
         if (collideToRightBlock) {
             goRightBall = true;
         }
@@ -599,9 +593,9 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         heartLabel = new Label("Heart : " + heart);
         heartLabel.setTranslateX(sceneWidth - 70);
         if (!loadFromSave) {
-            root.getChildren().addAll(rect, ball, scoreLabel, heartLabel, levelLabel, newGame);
+            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel, newGame);
         } else {
-            root.getChildren().addAll(rect, ball, scoreLabel, heartLabel, levelLabel);
+            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
         }
         for (Block block : blocks) {
             root.getChildren().add(block.rect);
@@ -653,7 +647,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         try {
             // Reset game variables for a fresh start
             level = 0;
-            heart = 10;
+            heart = 1000;
             score = 0;
             vX = 1.000;
             destroyedBlockCount = 0;
@@ -683,8 +677,8 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             scoreLabel.setText("Score: " + score);
             heartLabel.setText("Heart : " + heart);
 
-            rect.setX(xBreak);
-            rect.setY(yBreak);
+            paddle.setX(xBreak);
+            paddle.setY(yBreak);
             ball.setCenterX(xBall);
             ball.setCenterY(yBall);
 
@@ -701,7 +695,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
         if (yBall >= Block.getPaddingTop() && yBall <= (Block.getHeight() * (level + 1)) + Block.getPaddingTop()) {
             for (final Block block : blocks) {
-                int hitCode = block.checkHitToBlock(xBall, yBall);
+                int hitCode = block.checkHitToBlock(xBall, yBall, ballRadius);
                 if (hitCode != Block.NO_HIT) {
                     score += 1;
 
