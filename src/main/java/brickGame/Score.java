@@ -86,4 +86,3 @@ public class Score {
         sequentialTransition.play();
     }
 }
-

@@ -127,7 +127,6 @@ public class Block implements Serializable {
         return NO_HIT;
     }
 
-
     public static int getPaddingTop() {
         return block.paddingTop;
     }

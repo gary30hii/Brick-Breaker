@@ -1,14 +1,13 @@
 package brickGame;
 
+import javafx.animation.AnimationTimer;
+
 public class GameEngine {
 
     private OnAction onAction;
-    private volatile boolean isStopped = true;
+    private boolean isStopped = true;
     private int frameDelay = 66; // Default for ~15 fps (1000ms / 15)
-    private Thread updateThread;
-    private Thread physicsThread;
-    private Thread timeThread;
-    private long time = 0;
+    private long lastUpdateTime = 0;
 
     public interface OnAction {
         void onUpdate();
@@ -28,60 +27,27 @@ public class GameEngine {
         this.frameDelay = 1000 / fps;
     }
 
-    private void update() {
-        updateThread = new Thread(() -> {
-            while (!isStopped) {
-                try {
-                    onAction.onUpdate();
-                    Thread.sleep(frameDelay);
-                } catch (InterruptedException e) {
-                    if (isStopped) {
-                        break;
+    private void gameLoop() {
+        new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                if (!isStopped) {
+                    if (lastUpdateTime == 0) {
+                        lastUpdateTime = now;
                     }
-                    Thread.currentThread().interrupt();
+
+                    long elapsedNanoSeconds = now - lastUpdateTime;
+                    long elapsedMilliseconds = elapsedNanoSeconds / 1_000_000;
+
+                    if (elapsedMilliseconds > frameDelay) {
+                        onAction.onUpdate();
+                        onAction.onPhysicsUpdate();
+                        onAction.onTime(System.currentTimeMillis());
+                        lastUpdateTime = now;
+                    }
                 }
             }
-        });
-        updateThread.start();
-    }
-
-    private void initialize() {
-        onAction.onInit();
-    }
-
-    private void physicsCalculation() {
-        physicsThread = new Thread(() -> {
-            while (!isStopped) {
-                try {
-                    onAction.onPhysicsUpdate();
-                    Thread.sleep(frameDelay);
-                } catch (InterruptedException e) {
-                    if (isStopped) {
-                        break;
-                    }
-                    Thread.currentThread().interrupt();
-                }
-            }
-        });
-        physicsThread.start();
-    }
-
-    private void timeStart() {
-        timeThread = new Thread(() -> {
-            while (!isStopped) {
-                try {
-                    time++;
-                    onAction.onTime(time);
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    if (isStopped) {
-                        break;
-                    }
-                    Thread.currentThread().interrupt();
-                }
-            }
-        });
-        timeThread.start();
+        }.start();
     }
 
     public void start() {
@@ -89,26 +55,12 @@ public class GameEngine {
             return; // The game is already running
         }
         isStopped = false;
-        time = 0;
-        initialize();
-        update();
-        physicsCalculation();
-        timeStart();
+        onAction.onInit();
+        gameLoop();
     }
 
     public void stop() {
         isStopped = true;
-
-        updateThread.interrupt();
-        physicsThread.interrupt();
-        timeThread.interrupt();
-
-        try {
-            updateThread.join();
-            physicsThread.join();
-            timeThread.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        lastUpdateTime = 0;
     }
 }
