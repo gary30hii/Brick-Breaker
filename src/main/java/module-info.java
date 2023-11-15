@@ -4,4 +4,10 @@ module brickGame {
 
     opens brickGame to javafx.fxml;
     exports brickGame;
+    exports brickGame.model;
+    opens brickGame.model to javafx.fxml;
+    exports brickGame.engine;
+    opens brickGame.engine to javafx.fxml;
+    exports brickGame.controller;
+    opens brickGame.controller to javafx.fxml;
 }

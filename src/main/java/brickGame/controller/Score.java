@@ -1,5 +1,6 @@
-package brickGame;
+package brickGame.controller;
 
+import brickGame.Main;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.SequentialTransition;
