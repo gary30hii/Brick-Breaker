@@ -2,7 +2,6 @@ package brickGame;
 
 import brickGame.model.BlockSerializable;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -43,7 +42,7 @@ public class LoadSave {
     public void read() {
 
         try {
-            ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(new File(Main.savePath)));
+            ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(Main.savePath));
 
             level = inputStream.readInt();
             score = inputStream.readInt();
@@ -73,16 +72,18 @@ public class LoadSave {
             collideToLeftBlock = inputStream.readBoolean();
             collideToTopBlock = inputStream.readBoolean();
 
-
-            try {
-                blocks = (ArrayList<BlockSerializable>) inputStream.readObject();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+            // Read and reconstruct blocks
+            int blocksSize = inputStream.readInt();
+            blocks = new ArrayList<>(blocksSize);
+            for (int i = 0; i < blocksSize; i++) {
+                int row = inputStream.readInt();
+                int column = inputStream.readInt();
+                int type = inputStream.readInt();
+                boolean isDestroyed = inputStream.readBoolean();
+                blocks.add(new BlockSerializable(row, column, type, isDestroyed));
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 }

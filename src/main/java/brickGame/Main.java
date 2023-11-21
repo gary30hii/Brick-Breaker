@@ -77,7 +77,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             Color.TOMATO,
             Color.TAN,
     };
-
     public Pane root;
     private Label scoreLabel;
     private Label heartLabel;
@@ -100,16 +99,22 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private boolean collideToTopBlock = false;
 
     private double vX = 1.000;
-    private double vY = 1.000;
+    private double vY = 3.000;
 
     // Initialize the game and UI elements
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
-        gameController = new GameController(0, 0, 100);
         if (!loadFromSave) {
-            gameController.nextLevel(this);
-
+            gameController = new GameController(0, 0, 100);
+            gameController.setLevel(gameController.getLevel() + 1);
+            if (gameController.getLevel() > 1) {
+                new Score().showMessage("Level Up :)", this);
+            }
+            if (gameController.getLevel() == 18) {
+                new Score().showWin(this);
+                return;
+            }
             initBall();
             initBreak();
             initBoard();
@@ -120,36 +125,70 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             load.setTranslateY(300);
             newGame.setTranslateX(220);
             newGame.setTranslateY(340);
-
         }
 
-        initializeGameUI();
-        Scene scene = createGameScene();
-        configureStage(scene);
+        root = new Pane();
+        scoreLabel = new Label("Score: " + gameController.getScore());
+        levelLabel = new Label("Level: " + gameController.getLevel());
+        levelLabel.setTranslateY(20);
+        heartLabel = new Label("Heart : " + gameController.getHeart());
+        heartLabel.setTranslateX(sceneWidth - 70);
+        if (!loadFromSave) {
+            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel, load, newGame);
+        } else {
+            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
+        }
+        for (Block block : blocks) {
+            if (block.rect != null) {
+                root.getChildren().add(block.rect);
+            } else {
+                // Handle the case where rect is null
+                System.out.println("Error: Block rect is null for block at row " + block.row + " and column " + block.column);
+            }
+        }
+
+        Scene scene = new Scene(root, sceneWidth, sceneHeight);
+        scene.getStylesheets().add("style.css");
         scene.setOnKeyPressed(this);
+
+        primaryStage.setTitle("Brick Breaker");
+        primaryStage.setScene(scene);
+        primaryStage.show();
 
         if (!loadFromSave) {
             if (gameController.getLevel() > 1 && gameController.getLevel() < 18) {
-                setupNewGame();
+                load.setVisible(false);
+                newGame.setVisible(false);
+                engine = new GameEngine();
+                engine.setOnAction(this);
+                engine.setFps(120);
+                engine.start();
             }
-            setupButtons();
+
+            load.setOnAction(event -> {
+                loadGame();
+
+                load.setVisible(false);
+                newGame.setVisible(false);
+            });
+
+            newGame.setOnAction(event -> {
+                engine = new GameEngine();
+                engine.setOnAction(Main.this);
+                engine.setFps(120);
+                engine.start();
+
+                load.setVisible(false);
+                newGame.setVisible(false);
+            });
         } else {
-            setupGameFromSave();
+            engine = new GameEngine();
+            engine.setOnAction(this);
+            engine.setFps(120);
+            engine.start();
+            loadFromSave = false;
         }
-    }
 
-    // Add a method to initialize the next level without changing the current level count
-    private void initializeNextLevel() {
-        gameController.nextLevel(this);
-
-        initBall();
-        initBreak();
-        initBoard();
-        initializeGameUI();
-        Scene scene = createGameScene();
-        configureStage(scene);
-        scene.setOnKeyPressed(this);
-        setupNewGame();
     }
 
     // Initialize the game board
@@ -175,7 +214,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 } else {
                     type = Block.BLOCK_NORMAL; // normal block
                 }
-                blocks.add(new Block(j, i, colors[r % (colors.length)], type));
+                blocks.add(new Block(j, i, colors[r % (colors.length)], type, false));
             }
         }
     }
@@ -373,8 +412,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             resetCollideFlags();
             goDownBall = true;
         }
-
-
     }
 
     // Save the game state to a file
@@ -414,18 +451,16 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 outputStream.writeBoolean(collideToLeftBlock);
                 outputStream.writeBoolean(collideToTopBlock);
 
-                ArrayList<BlockSerializable> blockSerializables = new ArrayList<>();
+                // Save blocks
+                outputStream.writeInt(blocks.size()); // Write the size of the block list
                 for (Block block : blocks) {
-                    if (block.isDestroyed) {
-                        continue;
-                    }
-                    blockSerializables.add(new BlockSerializable(block.row, block.column, block.type));
+                    outputStream.writeInt(block.row);
+                    outputStream.writeInt(block.column);
+                    outputStream.writeInt(block.type);
+                    outputStream.writeBoolean(block.isDestroyed);
                 }
 
-                outputStream.writeObject(blockSerializables);
-
                 new Score().showMessage("Game Saved", Main.this);
-
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -479,8 +514,10 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         chocos.clear();
 
         for (BlockSerializable ser : loadSave.blocks) {
-            int r = new Random().nextInt(200);
-            blocks.add(new Block(ser.row, ser.column, colors[r % colors.length], ser.type));
+            int r = new Random().nextInt(200); // Example random color selection
+            Block newBlock = new Block(ser.row, ser.column, colors[r % colors.length], ser.type, ser.isDestroyed);
+            blocks.add(newBlock);
+            System.out.println(ser.row + " " + ser.column + " " + ser.type + " " + ser.isDestroyed);
         }
 
         try {
@@ -496,7 +533,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private void nextLevel() {
         Platform.runLater(() -> {
             try {
-                System.out.println("Entering nextLevel method");
                 // Reset variables for the next level
                 vX = 1.000;
                 engine.stop();
@@ -511,11 +547,90 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 destroyedBlockCount = 0;
 
                 // Call the initialization logic directly
-                initializeNextLevel();
+                initializeGame();
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
+    }
+
+    // Extract common initialization logic into a separate method
+    private void initializeGame() {
+        // Add the initialization logic here
+        gameController.setLevel(gameController.getLevel() + 1);
+        if (gameController.getLevel() > 1) {
+            new Score().showMessage("Level Up :)", this);
+        }
+        if (gameController.getLevel() == 18) {
+            new Score().showWin(this);
+            return;
+        }
+
+        initBall();
+        initBreak();
+        initBoard();
+
+        load = new Button("Load Game");
+        newGame = new Button("Start New Game");
+        load.setTranslateX(220);
+        load.setTranslateY(300);
+        newGame.setTranslateX(220);
+        newGame.setTranslateY(340);
+
+        root = new Pane();
+        scoreLabel = new Label("Score: " + gameController.getScore());
+        levelLabel = new Label("Level: " + gameController.getLevel());
+        levelLabel.setTranslateY(20);
+        heartLabel = new Label("Heart : " + gameController.getHeart());
+        heartLabel.setTranslateX(sceneWidth - 70);
+        if (!loadFromSave) {
+            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel, newGame);
+        } else {
+            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
+        }
+        for (Block block : blocks) {
+            root.getChildren().add(block.rect);
+        }
+        Scene scene = new Scene(root, sceneWidth, sceneHeight);
+        scene.getStylesheets().add("style.css");
+        scene.setOnKeyPressed(this);
+
+        primaryStage.setTitle("Game");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+
+        if (!loadFromSave) {
+            if (gameController.getLevel() > 1 && gameController.getLevel() < 18) {
+                load.setVisible(false);
+                newGame.setVisible(false);
+                engine = new GameEngine();
+                engine.setOnAction(this);
+                engine.setFps(120);
+                engine.start();
+            }
+
+            load.setOnAction(event -> {
+                loadGame();
+                load.setVisible(false);
+                newGame.setVisible(false);
+            });
+
+            newGame.setOnAction(event -> {
+                engine = new GameEngine();
+                engine.setOnAction(Main.this);
+                engine.setFps(120);
+                engine.start();
+                load.setVisible(false);
+                newGame.setVisible(false);
+            });
+        } else {
+            engine = new GameEngine();
+            engine.setOnAction(this);
+            engine.setFps(120);
+            engine.start();
+            loadFromSave = false;
+        }
     }
 
     // Method to restart the game from the beginning
@@ -651,68 +766,4 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     public void onTime(long time) {
         this.time = time;
     }
-
-    private void initializeGameUI() {
-        root = new Pane();
-        scoreLabel = new Label("Score: " + gameController.getScore());
-        levelLabel = new Label("Level: " + gameController.getLevel());
-        levelLabel.setTranslateY(20);
-        heartLabel = new Label("Heart : " + gameController.getHeart());
-        heartLabel.setTranslateX(sceneWidth - 70);
-
-        if (!loadFromSave) {
-            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel, newGame);
-        } else {
-            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
-        }
-
-        for (Block block : blocks) {
-            root.getChildren().add(block.rect);
-        }
-    }
-
-    private Scene createGameScene() {
-        Scene scene = new Scene(root, sceneWidth, sceneHeight);
-        scene.getStylesheets().add("style.css");
-        return scene;
-    }
-
-    private void configureStage(Scene scene) {
-        primaryStage.setTitle("Brick Breaker");
-        primaryStage.setScene(scene);
-        primaryStage.show();
-    }
-
-    private void initializeGameEngine() {
-        engine = new GameEngine();
-        engine.setOnAction(this);
-        engine.setFps(120);
-        engine.start();
-    }
-
-    private void setupNewGame() {
-        load.setVisible(false);
-        newGame.setVisible(false);
-        initializeGameEngine();
-    }
-
-    private void setupButtons() {
-        load.setOnAction(event -> {
-            loadGame();
-            load.setVisible(false);
-            newGame.setVisible(false);
-        });
-
-        newGame.setOnAction(event -> {
-            initializeGameEngine();
-            load.setVisible(false);
-            newGame.setVisible(false);
-        });
-    }
-
-    private void setupGameFromSave() {
-        initializeGameEngine();
-        loadFromSave = false;
-    }
-
 }
