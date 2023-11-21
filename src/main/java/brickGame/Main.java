@@ -34,9 +34,9 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private final int breakWidth = 130;
     private final int breakHeight = 30;
     private final int halfBreakWidth = breakWidth / 2;
-    private final int sceneWidth = 500;
-    private final int sceneHeight = 700;
-    private double xBreak = (double) sceneWidth / 2 - (double) breakWidth / 2;
+    public static final int SCENE_WIDTH = 500;
+    public static final int SCENE_HEIGHT = 700;
+    private double xBreak = (double) SCENE_WIDTH / 2 - (double) breakWidth / 2;
     private double centerBreakX;
     private double yBreak = 640.0f;
 
@@ -105,8 +105,10 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
+        root = new Pane();
+        paddle = new Rectangle();
         if (!loadFromSave) {
-            gameController = new GameController(0, 0, 100);
+            gameController = new GameController(0, 0, 100, root);
             gameController.setLevel(gameController.getLevel() + 1);
             if (gameController.getLevel() > 1) {
                 new Score().showMessage("Level Up :)", this);
@@ -116,8 +118,8 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 return;
             }
             initBall();
-            initBreak();
-            initBoard();
+            gameController.initPaddle(paddle);
+            gameController.initBoard(blocks);
 
             load = new Button("Load Game");
             newGame = new Button("Start New Game");
@@ -127,19 +129,18 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             newGame.setTranslateY(340);
         }
 
-        root = new Pane();
         scoreLabel = new Label("Score: " + gameController.getScore());
         levelLabel = new Label("Level: " + gameController.getLevel());
         levelLabel.setTranslateY(20);
         heartLabel = new Label("Heart : " + gameController.getHeart());
-        heartLabel.setTranslateX(sceneWidth - 70);
+        heartLabel.setTranslateX(SCENE_WIDTH - 70);
         if (!loadFromSave) {
             root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel, load, newGame);
         } else {
             root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
         }
         for (Block block : blocks) {
-            if (block.rect != null) {
+            if (block.rect != null && !block.isDestroyed) {
                 root.getChildren().add(block.rect);
             } else {
                 // Handle the case where rect is null
@@ -147,7 +148,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             }
         }
 
-        Scene scene = new Scene(root, sceneWidth, sceneHeight);
+        Scene scene = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
         scene.getStylesheets().add("style.css");
         scene.setOnKeyPressed(this);
 
@@ -191,34 +192,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     }
 
-    // Initialize the game board
-    private void initBoard() {
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < gameController.getLevel() + 1; j++) {
-                int r = new Random().nextInt(500);
-                if (r % 5 == 0) {
-                    continue; //empty block
-                }
-                int type;
-                if (r % 10 == 1) {
-                    type = Block.BLOCK_CHOCO; // choco block
-                } else if (r % 10 == 2) {
-                    if (!isExistHeartBlock) {
-                        type = Block.BLOCK_HEART; // heart block
-                        isExistHeartBlock = true;
-                    } else {
-                        type = Block.BLOCK_NORMAL; // normal block
-                    }
-                } else if (r % 10 == 3) {
-                    type = Block.BLOCK_STAR; // star block
-                } else {
-                    type = Block.BLOCK_NORMAL; // normal block
-                }
-                blocks.add(new Block(j, i, colors[r % (colors.length)], type, false));
-            }
-        }
-    }
-
     // Main method to launch the application
     public static void main(String[] args) {
         launch(args);
@@ -248,7 +221,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         new Thread(() -> {
             int sleepTime = 1;
             for (int i = 0; i < 30; i++) {
-                if (xBreak == (sceneWidth - breakWidth) && direction == RIGHT) {
+                if (xBreak == (SCENE_WIDTH - breakWidth) && direction == RIGHT) {
                     return; //paddle stop moving to the right when it touches the right wall
                 }
                 if (xBreak == 0 && direction == LEFT) {
@@ -275,28 +248,28 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     // Initialize the game ball
     private void initBall() {
         Random random = new Random();
-        xBall = random.nextInt(sceneWidth) + 1;
+        xBall = random.nextInt(SCENE_WIDTH) + 1;
         // Ensure yBall is within acceptable limits
         int minY = Block.getPaddingTop() + (gameController.getLevel() + 1) * Block.getHeight() + ballRadius;
-        int maxY = sceneHeight - ballRadius;
-        yBall = Math.max(minY, Math.min(random.nextInt(sceneHeight - 200) + minY, maxY));
+        int maxY = SCENE_HEIGHT - ballRadius;
+        yBall = Math.max(minY, Math.min(random.nextInt(SCENE_HEIGHT - 200) + minY, maxY));
         ball = new Circle();
         ball.setRadius(ballRadius);
         ball.setFill(new ImagePattern(new Image("ball.png")));
     }
 
     // Initialize the paddle (break)
-    private void initBreak() {
-        paddle = new Rectangle();
-        paddle.setWidth(breakWidth);
-        paddle.setHeight(breakHeight);
-        paddle.setX(xBreak);
-        paddle.setY(yBreak);
-
-        ImagePattern pattern = new ImagePattern(new Image("block.jpg"));
-
-        paddle.setFill(pattern);
-    }
+//    private void initBreak() {
+//        paddle = new Rectangle();
+//        paddle.setWidth(breakWidth);
+//        paddle.setHeight(breakHeight);
+//        paddle.setX(xBreak);
+//        paddle.setY(yBreak);
+//
+//        ImagePattern pattern = new ImagePattern(new Image("block.jpg"));
+//
+//        paddle.setFill(pattern);
+//    }
 
     // Reset collision flags
     private void resetCollideFlags() {
@@ -333,13 +306,13 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             goDownBall = true;
             return;
         }
-        if (yBall >= sceneHeight) {
+        if (yBall >= SCENE_HEIGHT) {
             resetCollideFlags();
             goDownBall = false;
             if (!isGoldStatus) {
                 //TODO game-over
                 gameController.setHeart(gameController.getHeart() - 1);
-                new Score().show((double) sceneWidth / 2, (double) sceneHeight / 2, -1, this);
+                new Score().show((double) SCENE_WIDTH / 2, (double) SCENE_HEIGHT / 2, -1, this);
 
                 if (gameController.getHeart() == 0) {
                     new Score().showGameOver(this);
@@ -368,7 +341,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             }
         }
 
-        if (xBall >= sceneWidth) {
+        if (xBall >= SCENE_WIDTH) {
             resetCollideFlags();
             //vX = 1.000;
             collideToRightWall = true;
@@ -523,6 +496,10 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         try {
             loadFromSave = true;
             start(primaryStage);
+            // Reinitialize the paddle and add it to the root pane
+            paddle = new Rectangle();
+            gameController.initPaddle(paddle);
+            root.getChildren().add(paddle);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -568,8 +545,8 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         }
 
         initBall();
-        initBreak();
-        initBoard();
+        gameController.initPaddle(paddle);
+        gameController.initBoard(blocks);
 
         load = new Button("Load Game");
         newGame = new Button("Start New Game");
@@ -583,7 +560,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         levelLabel = new Label("Level: " + gameController.getLevel());
         levelLabel.setTranslateY(20);
         heartLabel = new Label("Heart : " + gameController.getHeart());
-        heartLabel.setTranslateX(sceneWidth - 70);
+        heartLabel.setTranslateX(SCENE_WIDTH - 70);
         if (!loadFromSave) {
             root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel, newGame);
         } else {
@@ -592,7 +569,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         for (Block block : blocks) {
             root.getChildren().add(block.rect);
         }
-        Scene scene = new Scene(root, sceneWidth, sceneHeight);
+        Scene scene = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
         scene.getStylesheets().add("style.css");
         scene.setOnKeyPressed(this);
 
@@ -748,7 +725,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         }
 
         for (Bonus choco : chocos) {
-            if (choco.y > sceneHeight || choco.taken) {
+            if (choco.y > SCENE_HEIGHT || choco.taken) {
                 continue;
             }
             if (choco.y >= yBreak && choco.y <= yBreak + breakHeight && choco.x >= xBreak && choco.x <= xBreak + breakWidth) {

@@ -43,9 +43,7 @@ public class Block implements Serializable {
         this.color = color;
         this.type = type;
         this.isDestroyed = isDestroyed;
-        if(!isDestroyed){
-            draw();
-        }
+        draw();
     }
 
     //Draws the block based on its position and type.
@@ -80,6 +78,7 @@ public class Block implements Serializable {
 
     /**
      * Checks if the ball hits the block and returns the hit direction.
+     *
      * @param xBall The x-coordinate of the ball.
      * @param yBall The y-coordinate of the ball.
      * @return The hit direction: HIT_BOTTOM, HIT_TOP, HIT_RIGHT, HIT_LEFT, or NO_HIT.
@@ -97,8 +96,8 @@ public class Block implements Serializable {
         double dx = ballCenterX - blockCenterX;
         double dy = ballCenterY - blockCenterY;
 
-        double combinedHalfWidths = ballRadius + (double) width /2;
-        double combinedHalfHeights = ballRadius + (double) height /2;
+        double combinedHalfWidths = ballRadius + (double) width / 2;
+        double combinedHalfHeights = ballRadius + (double) height / 2;
 
         if (Math.abs(dx) <= combinedHalfWidths && Math.abs(dy) <= combinedHalfHeights) {
             double overlapX = combinedHalfWidths - Math.abs(dx);
