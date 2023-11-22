@@ -37,7 +37,11 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     public static final String SAVE_PATH = "data/save.mdds", SAVE_PATH_DIR = "data/";
 
     // Game variables
-    private double xPaddle = (double) Main.SCENE_WIDTH / 2 - (double) PADDLE_WIDTH / 2, yPaddle = 640.0, centerPaddleX, vX = 1.0, vY = 3.0;
+    private double xPaddle = (double) Main.SCENE_WIDTH / 2 - (double) PADDLE_WIDTH / 2;
+    private double yPaddle = 640.0;
+    private double centerPaddleX;
+    private double vX = 1.0;
+    private final double vY = 3.0;
     private long time, goldTime;
     private int destroyedBlockCount;
     private boolean loadFromSave, goDownBall = true, goRightBall = true, isGoldStatus;
@@ -53,9 +57,10 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     private GameEngine engine;
     private GameController gameController;
-    private ArrayList<Block> blocks = new ArrayList<>();
-    private ArrayList<Bonus> bonuses = new ArrayList<>();
+    private final ArrayList<Block> blocks = new ArrayList<>();
+    private final ArrayList<Bonus> bonuses = new ArrayList<>();
     private final Color[] COLORS = initializeColors();
+
     // Initialize the game and UI elements
     @Override
     public void start(Stage primaryStage) {
@@ -69,81 +74,18 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         ball = new Circle();
         if (!loadFromSave) {
             gameController = new GameController(0, 0, 100, root);
-            gameController.setLevel(gameController.getLevel() + 1);
-            if (gameController.getLevel() > 1) {
-                new Score().showMessage("Level Up :)", this);
-            }
-            if (gameController.getLevel() == 18) {
-                new Score().showWin(this);
-                return;
-            }
-            gameController.initBall(ball);
-            gameController.initPaddle(paddle);
-            gameController.initBoard(blocks);
-
-            loadButton = new Button("Load Game");
-            newGameButton = new Button("Start New Game");
-            loadButton.setTranslateX(220);
-            loadButton.setTranslateY(300);
-            newGameButton.setTranslateX(220);
-            newGameButton.setTranslateY(340);
+            levelUp();
+            initializeGameElements();
+            setupGameButtons();
         }
 
-        scoreLabel = new Label("Score: " + gameController.getScore());
-        levelLabel = new Label("Level: " + gameController.getLevel());
-        levelLabel.setTranslateY(20);
-        heartLabel = new Label("Heart : " + gameController.getHeart());
-        heartLabel.setTranslateX(SCENE_WIDTH - 70);
-        if (!loadFromSave) {
-            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel, loadButton, newGameButton);
-        } else {
-            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
-        }
-        for (Block block : blocks) {
-            if (block.rect != null && !block.isDestroyed) {
-                root.getChildren().add(block.rect);
-            }
-        }
-
-        Scene scene = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
-        scene.getStylesheets().add("style.css");
-        scene.setOnKeyPressed(this);
-
-        primaryStage.setTitle("Brick Breaker");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        setUpGameUI();
+        initializeGameWindow();
 
         if (!loadFromSave) {
-            if (gameController.getLevel() > 1 && gameController.getLevel() < 18) {
-                loadButton.setVisible(false);
-                newGameButton.setVisible(false);
-                engine = new GameEngine();
-                engine.setOnAction(this);
-                engine.setFps(120);
-                engine.start();
-            }
-
-            loadButton.setOnAction(event -> {
-                loadSavedGameState();
-
-                loadButton.setVisible(false);
-                newGameButton.setVisible(false);
-            });
-
-            newGameButton.setOnAction(event -> {
-                engine = new GameEngine();
-                engine.setOnAction(Main.this);
-                engine.setFps(120);
-                engine.start();
-
-                loadButton.setVisible(false);
-                newGameButton.setVisible(false);
-            });
+            handleGameControls();
         } else {
-            engine = new GameEngine();
-            engine.setOnAction(this);
-            engine.setFps(120);
-            engine.start();
+            initializeAndStartGameEngine();
             loadFromSave = false;
         }
 
@@ -316,7 +258,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     // Save the game state to a file
     private void saveCurrentGameState() {
         new Thread(() -> {
-            new File(SAVE_PATH_DIR).mkdirs();
+            new File(SAVE_PATH_DIR);
             File file = new File(SAVE_PATH);
             ObjectOutputStream outputStream = null;
             try {
@@ -462,78 +404,107 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     // Extract common initialization logic into a separate method
     private void setupNewGameLevel() {
         // Add the initialization logic here
-        gameController.setLevel(gameController.getLevel() + 1);
-        if (gameController.getLevel() > 1) {
-            new Score().showMessage("Level Up :)", this);
-        }
-        if (gameController.getLevel() == 18) {
-            new Score().showWin(this);
-            return;
-        }
+        levelUp();
+        initializeGameElements();
+        setupGameButtons();
 
+        root = new Pane();
+
+        setUpGameUI();
+        initializeGameWindow();
+
+        if (!loadFromSave) {
+            handleGameControls();
+        } else {
+            initializeAndStartGameEngine();
+            loadFromSave = false;
+        }
+    }
+
+    private void initializeGameElements() {
         gameController.initBall(ball);
         gameController.initPaddle(paddle);
         gameController.initBoard(blocks);
+    }
 
+    private void setupGameButtons() {
         loadButton = new Button("Load Game");
         newGameButton = new Button("Start New Game");
         loadButton.setTranslateX(220);
         loadButton.setTranslateY(300);
         newGameButton.setTranslateX(220);
         newGameButton.setTranslateY(340);
+    }
 
-        root = new Pane();
+    private void setUpGameUI() {
         scoreLabel = new Label("Score: " + gameController.getScore());
         levelLabel = new Label("Level: " + gameController.getLevel());
         levelLabel.setTranslateY(20);
         heartLabel = new Label("Heart : " + gameController.getHeart());
         heartLabel.setTranslateX(SCENE_WIDTH - 70);
+
         if (!loadFromSave) {
-            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel, newGameButton, loadButton);
+            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel, loadButton, newGameButton);
         } else {
             root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
         }
+
         for (Block block : blocks) {
-            root.getChildren().add(block.rect);
+            if (block.rect != null && !block.isDestroyed) {
+                root.getChildren().add(block.rect);
+            }
         }
+    }
+
+    private void initializeGameWindow() {
         Scene scene = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
         scene.getStylesheets().add("style.css");
         scene.setOnKeyPressed(this);
 
-        primaryStage.setTitle("Game");
+        primaryStage.setTitle("Brick Breaker");
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
 
-        if (!loadFromSave) {
-            if (gameController.getLevel() > 1 && gameController.getLevel() < 18) {
-                loadButton.setVisible(false);
-                newGameButton.setVisible(false);
-                engine = new GameEngine();
-                engine.setOnAction(this);
-                engine.setFps(120);
-                engine.start();
-            }
+    private void handleGameControls() {
+        if (gameController.getLevel() > 1 && gameController.getLevel() < 18) {
+            loadButton.setVisible(false);
+            newGameButton.setVisible(false);
+            initializeAndStartGameEngine();
+        }
 
-            loadButton.setOnAction(event -> {
-                loadSavedGameState();
-                loadButton.setVisible(false);
-                newGameButton.setVisible(false);
-            });
+        loadButton.setOnAction(event -> {
+            loadSavedGameState();
 
-            newGameButton.setOnAction(event -> {
-                engine = new GameEngine();
-                engine.setOnAction(Main.this);
-                engine.setFps(120);
-                engine.start();
-                loadButton.setVisible(false);
-                newGameButton.setVisible(false);
-            });
-        } else {
-            engine = new GameEngine();
-            engine.setOnAction(this);
-            engine.setFps(120);
-            engine.start();
-            loadFromSave = false;
+            loadButton.setVisible(false);
+            newGameButton.setVisible(false);
+        });
+
+        newGameButton.setOnAction(event -> {
+            initializeAndStartGameEngine();
+
+            loadButton.setVisible(false);
+            newGameButton.setVisible(false);
+        });
+    }
+
+    private void initializeAndStartGameEngine() {
+        engine = new GameEngine();
+        engine.setOnAction(this);
+        engine.setFps(120);
+        engine.start();
+    }
+
+    private void levelUp() {
+        gameController.setLevel(gameController.getLevel() + 1);
+
+        if (gameController.getLevel() > 1) {
+            new Score().showMessage("Level Up :)", this);
+        }
+
+        if (gameController.getLevel() == 18) {
+            new Score().showWin(this);
+            return;
         }
     }
 
