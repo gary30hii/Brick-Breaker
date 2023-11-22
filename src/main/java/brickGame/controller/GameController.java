@@ -1,4 +1,5 @@
 package brickGame.controller;
+
 import brickGame.Main;
 import brickGame.model.Block;
 import javafx.scene.image.Image;
@@ -30,22 +31,26 @@ public class GameController {
             Color.TOMATO,
             Color.TAN,
     };
-    private Circle ball;
-//    private Rectangle paddle; // The paddle (break)
+
+//    private Circle ball;
+    private double xBall;
+    private double yBall;
+    private final int ballRadius = 10;
     private Pane root; // The root pane where game elements are added
-    private final int breakWidth = 130;
-    private final int breakHeight = 30;
-    private double xBreak; // X position of the break
-    private double yBreak = 640.0f; // Y position of the break
+    private final int paddleWidth = 130;
+    private final int paddleHeight = 30;
+    private double xPaddle; // X position of the break
+    private double yPaddle = 640.0f; // Y position of the break
     private boolean isGoldStatus;
-    private boolean isExistHeartBlock;
+
+    private boolean isExistHeartBlock = false;
 
     public GameController(int level, int score, int heart, Pane root) {
         this.level = level;
         this.score = score;
         this.heart = heart;
         this.root = root;
-        this.xBreak = (double) Main.SCENE_WIDTH / 2 - (double) breakWidth / 2; // Assuming root has a predefined width
+        this.xPaddle = (double) Main.SCENE_WIDTH / 2 - (double) paddleWidth / 2; // Assuming root has a predefined width
     }
 
     public int getLevel() {
@@ -60,6 +65,18 @@ public class GameController {
         return heart;
     }
 
+    public double getXBall() {
+        return xBall;
+    }
+
+    public double getYBall() {
+        return yBall;
+    }
+
+    public boolean isExistHeartBlock() {
+        return isExistHeartBlock;
+    }
+
     public void setLevel(int level) {
         this.level = level;
     }
@@ -70,6 +87,18 @@ public class GameController {
 
     public void setHeart(int heart) {
         this.heart = heart;
+    }
+
+    public void setXBall(double xBall) {
+        this.xBall = xBall;
+    }
+
+    public void setYBall(double yBall) {
+        this.yBall = yBall;
+    }
+
+    public void setExistHeartBlock(boolean existHeartBlock) {
+        isExistHeartBlock = existHeartBlock;
     }
 
     // Initialize the game board
@@ -107,14 +136,26 @@ public class GameController {
 
     public void initPaddle(Rectangle paddle) {
         // Initialize the paddle
-        paddle.setWidth(breakWidth);
-        paddle.setHeight(breakHeight);
-        paddle.setX(xBreak);
-        paddle.setY(yBreak);
+        paddle.setWidth(paddleWidth);
+        paddle.setHeight(paddleHeight);
+        paddle.setX(xPaddle);
+        paddle.setY(yPaddle);
 
         // Apply a texture or color to the paddle
         ImagePattern pattern = new ImagePattern(new Image("block.jpg"));
         paddle.setFill(pattern);
 
+    }
+
+    // Initialize the game ball
+    public void initBall(Circle ball) {
+        Random random = new Random();
+        xBall = random.nextInt(Main.SCENE_WIDTH) + 1;
+        // Ensure yBall is within acceptable limits
+        int minY = Block.getPaddingTop() + (getLevel() + 1) * Block.getHeight() + ballRadius;
+        int maxY = Main.SCENE_HEIGHT - ballRadius;
+        yBall = Math.max(minY, Math.min(random.nextInt(Main.SCENE_HEIGHT - 200) + minY, maxY));
+        ball.setRadius(ballRadius);
+        ball.setFill(new ImagePattern(new Image("ball.png")));
     }
 }

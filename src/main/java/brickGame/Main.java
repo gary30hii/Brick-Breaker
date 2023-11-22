@@ -20,12 +20,16 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class Main extends Application implements EventHandler<KeyEvent>, GameEngine.OnAction {
+
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     // Game variables and constants
     private static final int LEFT = 1;
@@ -41,11 +45,8 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private double yBreak = 640.0f;
 
     private Circle ball;
-    private double xBall;
-    private double yBall;
-
     private boolean isGoldStatus = false;
-    private boolean isExistHeartBlock = false;
+//    private boolean isExistHeartBlock = false;
 
     private Rectangle paddle;
     private final int ballRadius = 10;
@@ -107,6 +108,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         this.primaryStage = primaryStage;
         root = new Pane();
         paddle = new Rectangle();
+        ball = new Circle();
         if (!loadFromSave) {
             gameController = new GameController(0, 0, 100, root);
             gameController.setLevel(gameController.getLevel() + 1);
@@ -117,7 +119,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 new Score().showWin(this);
                 return;
             }
-            initBall();
+            gameController.initBall(ball);
             gameController.initPaddle(paddle);
             gameController.initBoard(blocks);
 
@@ -142,9 +144,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         for (Block block : blocks) {
             if (block.rect != null && !block.isDestroyed) {
                 root.getChildren().add(block.rect);
-            } else {
-                // Handle the case where rect is null
-                System.out.println("Error: Block rect is null for block at row " + block.row + " and column " + block.column);
             }
         }
 
@@ -236,7 +235,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 try {
                     Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    logger.error("An error occurred in move() Method: " + e.getMessage(), e);
                 }
                 if (i >= 20) {
                     sleepTime = i;
@@ -244,32 +243,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             }
         }).start();
     }
-
-    // Initialize the game ball
-    private void initBall() {
-        Random random = new Random();
-        xBall = random.nextInt(SCENE_WIDTH) + 1;
-        // Ensure yBall is within acceptable limits
-        int minY = Block.getPaddingTop() + (gameController.getLevel() + 1) * Block.getHeight() + ballRadius;
-        int maxY = SCENE_HEIGHT - ballRadius;
-        yBall = Math.max(minY, Math.min(random.nextInt(SCENE_HEIGHT - 200) + minY, maxY));
-        ball = new Circle();
-        ball.setRadius(ballRadius);
-        ball.setFill(new ImagePattern(new Image("ball.png")));
-    }
-
-    // Initialize the paddle (break)
-//    private void initBreak() {
-//        paddle = new Rectangle();
-//        paddle.setWidth(breakWidth);
-//        paddle.setHeight(breakHeight);
-//        paddle.setX(xBreak);
-//        paddle.setY(yBreak);
-//
-//        ImagePattern pattern = new ImagePattern(new Image("block.jpg"));
-//
-//        paddle.setFill(pattern);
-//    }
 
     // Reset collision flags
     private void resetCollideFlags() {
@@ -289,24 +262,24 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private void setPhysicsToBall() {
 
         if (goDownBall) {
-            yBall += vY;
+            gameController.setYBall(gameController.getYBall() + vY);
         } else {
-            yBall -= vY;
+            gameController.setYBall(gameController.getYBall() - vY);
         }
 
         if (goRightBall) {
-            xBall += vX;
+            gameController.setXBall(gameController.getXBall() + vX);
         } else {
-            xBall -= vX;
+            gameController.setXBall(gameController.getXBall() - vX);
         }
 
-        if (yBall <= 0) {
+        if (gameController.getYBall() <= 0) {
             vX = 1.000;
             resetCollideFlags();
             goDownBall = true;
             return;
         }
-        if (yBall >= SCENE_HEIGHT) {
+        if (gameController.getYBall() >= SCENE_HEIGHT) {
             resetCollideFlags();
             goDownBall = false;
             if (!isGoldStatus) {
@@ -321,13 +294,13 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             }
         }
 
-        if (yBall >= yBreak - ballRadius) {
-            if (xBall >= xBreak && xBall <= xBreak + breakWidth) {
+        if (gameController.getYBall() >= yBreak - ballRadius) {
+            if (gameController.getXBall() >= xBreak && gameController.getXBall() <= xBreak + breakWidth) {
                 resetCollideFlags();
                 collideToBreak = true;
                 goDownBall = false;
 
-                double relation = (xBall - centerBreakX) / ((double) breakWidth / 2);
+                double relation = (gameController.getXBall() - centerBreakX) / ((double) breakWidth / 2);
 
                 if (Math.abs(relation) <= 0.3) {
                     vX = Math.abs(relation);
@@ -337,17 +310,17 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                     vX = (Math.abs(relation) * 2) + (gameController.getLevel() / 3.500);
                 }
 
-                collideToBreakAndMoveToRight = xBall - centerBreakX > 0;
+                collideToBreakAndMoveToRight = gameController.getXBall() - centerBreakX > 0;
             }
         }
 
-        if (xBall >= SCENE_WIDTH) {
+        if (gameController.getXBall() >= SCENE_WIDTH) {
             resetCollideFlags();
             //vX = 1.000;
             collideToRightWall = true;
         }
 
-        if (xBall <= 0) {
+        if (gameController.getXBall() <= 0) {
             resetCollideFlags();
             //vX = 1.000;
             collideToLeftWall = true;
@@ -401,8 +374,8 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 outputStream.writeInt(gameController.getHeart());
                 outputStream.writeInt(destroyedBlockCount);
 
-                outputStream.writeDouble(xBall);
-                outputStream.writeDouble(yBall);
+                outputStream.writeDouble(gameController.getXBall());
+                outputStream.writeDouble(gameController.getYBall());
                 outputStream.writeDouble(xBreak);
                 outputStream.writeDouble(yBreak);
                 outputStream.writeDouble(centerBreakX);
@@ -411,7 +384,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 outputStream.writeDouble(vX);
 
 
-                outputStream.writeBoolean(isExistHeartBlock);
+                outputStream.writeBoolean(gameController.isExistHeartBlock());
                 outputStream.writeBoolean(isGoldStatus);
                 outputStream.writeBoolean(goDownBall);
                 outputStream.writeBoolean(goRightBall);
@@ -436,7 +409,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 new Score().showMessage("Game Saved", Main.this);
 
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("An error occurred in saveGame() Method: " + e.getMessage(), e);
             } finally {
                 try {
                     if (outputStream != null) {
@@ -444,7 +417,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                         outputStream.close();
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error("An error occurred in saveGame() Method: " + e.getMessage(), e);
                 }
             }
         }).start();
@@ -458,7 +431,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         loadSave.read();
 
         // Load game state from the saved data
-        isExistHeartBlock = loadSave.isExistHeartBlock;
+        gameController.setExistHeartBlock(loadSave.isExistHeartBlock);
         isGoldStatus = loadSave.isGoldStatus;
         goDownBall = loadSave.goDownBall;
         goRightBall = loadSave.goRightBall;
@@ -474,8 +447,8 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         gameController.setScore(loadSave.score);
         gameController.setHeart(loadSave.heart);
         destroyedBlockCount = loadSave.destroyedBlockCount;
-        xBall = loadSave.xBall;
-        yBall = loadSave.yBall;
+        gameController.setXBall(loadSave.xBall);
+        gameController.setYBall(loadSave.yBall);
         xBreak = loadSave.xBreak;
         yBreak = loadSave.yBreak;
         centerBreakX = loadSave.centerBreakX;
@@ -499,9 +472,11 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             // Reinitialize the paddle and add it to the root pane
             paddle = new Rectangle();
             gameController.initPaddle(paddle);
-            root.getChildren().add(paddle);
+            ball = new Circle();
+            gameController.initBall(ball);
+            root.getChildren().addAll(paddle, ball);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("An error occurred in loadGame() Method: " + e.getMessage(), e);
         }
 
     }
@@ -516,7 +491,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 resetCollideFlags();
                 goDownBall = true;
                 isGoldStatus = false;
-                isExistHeartBlock = false;
+                gameController.setExistHeartBlock(false);
                 time = 0;
                 goldTime = 0;
                 blocks.clear();
@@ -527,7 +502,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 initializeGame();
 
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("An error occurred in nextLevel() Method: " + e.getMessage(), e);
             }
         });
     }
@@ -544,7 +519,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             return;
         }
 
-        initBall();
+        gameController.initBall(ball);
         gameController.initPaddle(paddle);
         gameController.initBoard(blocks);
 
@@ -623,7 +598,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             goDownBall = true;
 
             isGoldStatus = false;
-            isExistHeartBlock = false;
+            gameController.setExistHeartBlock(false);
             time = 0;
             goldTime = 0;
 
@@ -632,7 +607,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
             start(primaryStage);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("An error occurred in restartGame() Method: " + e.getMessage(), e);
         }
     }
 
@@ -646,8 +621,8 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
             paddle.setX(xBreak);
             paddle.setY(yBreak);
-            ball.setCenterX(xBall);
-            ball.setCenterY(yBall);
+            ball.setCenterX(gameController.getXBall());
+            ball.setCenterY(gameController.getYBall());
 
             for (Bonus choco : chocos) {
                 choco.choco.setY(choco.y);
@@ -660,9 +635,9 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         });
 
 
-        if (yBall >= Block.getPaddingTop() && yBall <= (Block.getHeight() * (gameController.getLevel() + 1)) + Block.getPaddingTop()) {
+        if (gameController.getYBall() >= Block.getPaddingTop() && gameController.getYBall() <= (Block.getHeight() * (gameController.getLevel() + 1)) + Block.getPaddingTop()) {
             for (final Block block : blocks) {
-                int hitCode = block.checkHitToBlock(xBall, yBall, ballRadius);
+                int hitCode = block.checkHitToBlock(gameController.getXBall(), gameController.getYBall(), ballRadius);
                 if (hitCode != Block.NO_HIT) {
                     gameController.setScore(gameController.getScore() + 1);
 

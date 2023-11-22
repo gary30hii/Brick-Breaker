@@ -6,8 +6,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LoadSave {
+    private static final Logger logger = LoggerFactory.getLogger(LoadSave.class);
+
     // Flags indicating game state
     public boolean isExistHeartBlock;
     public boolean isGoldStatus;
@@ -83,7 +87,7 @@ public class LoadSave {
                 blocks.add(new BlockSerializable(row, column, type, isDestroyed));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("An error occurred in read() Method: " + e.getMessage(), e);
         }
     }
 }
