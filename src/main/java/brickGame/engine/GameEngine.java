@@ -10,9 +10,9 @@ public class GameEngine {
     private long lastUpdateTime = 0;
 
     public interface OnAction {
-        void onUpdate();
+        void updateGameFrame();
         void onInit();
-        void onPhysicsUpdate();
+        void performPhysicsCalculations();
         void onTime(long time);
     }
 
@@ -40,8 +40,8 @@ public class GameEngine {
                     long elapsedMilliseconds = elapsedNanoSeconds / 1_000_000;
 
                     if (elapsedMilliseconds > frameDelay) {
-                        onAction.onUpdate();
-                        onAction.onPhysicsUpdate();
+                        onAction.updateGameFrame();
+                        onAction.performPhysicsCalculations();
                         onAction.onTime(System.currentTimeMillis());
                         lastUpdateTime = now;
                     }

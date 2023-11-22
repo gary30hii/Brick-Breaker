@@ -151,7 +151,6 @@ public class GameController {
     public void initBall(Circle ball) {
         Random random = new Random();
         xBall = random.nextInt(Main.SCENE_WIDTH) + 1;
-        // Ensure yBall is within acceptable limits
         int minY = Block.getPaddingTop() + (getLevel() + 1) * Block.getHeight() + ballRadius;
         int maxY = Main.SCENE_HEIGHT - ballRadius;
         yBall = Math.max(minY, Math.min(random.nextInt(Main.SCENE_HEIGHT - 200) + minY, maxY));
