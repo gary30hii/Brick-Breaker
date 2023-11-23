@@ -37,16 +37,15 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     public static final String SAVE_PATH = "data/save.mdds", SAVE_PATH_DIR = "data/";
 
     // Game variables
-    private double xPaddle = (double) Main.SCENE_WIDTH / 2 - (double) PADDLE_WIDTH / 2;
-    private double yPaddle = 640.0;
-    private double centerPaddleX;
-    private double vX = 1.0;
-    private final double vY = 3.0;
+    public static double X_PADDLE = (double) SCENE_WIDTH / 2 - (double) PADDLE_WIDTH / 2;
+    public static double Y_PADDLE = 640.0;
+    public static double X_PADDLE_CENTER;
     private long time, goldTime;
     private int destroyedBlockCount;
-    private boolean loadFromSave, goDownBall = true, goRightBall = true, isGoldStatus;
-    private boolean collideToPaddle, collideToPaddleAndMoveToRight, collideToRightWall, collideToLeftWall;
-    private boolean collideToRightBlock, collideToBottomBlock, collideToLeftBlock, collideToTopBlock;
+    private boolean loadFromSave;
+//    private boolean loadFromSave, goDownBall = true, goRightBall = true, isGoldStatus;
+//    private boolean collideToPaddle, collideToPaddleAndMoveToRight, collideToRightWall, collideToLeftWall;
+//    private boolean collideToRightBlock, collideToBottomBlock, collideToLeftBlock, collideToTopBlock;
 
     private Ball ball;
     private Rectangle paddle;
@@ -117,18 +116,18 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         new Thread(() -> {
             int sleepTime = 1;
             for (int i = 0; i < 30; i++) {
-                if (xPaddle == (SCENE_WIDTH - PADDLE_WIDTH) && direction == RIGHT) {
+                if (X_PADDLE == (SCENE_WIDTH - PADDLE_WIDTH) && direction == RIGHT) {
                     return; //paddle stop moving to the right when it touches the right wall
                 }
-                if (xPaddle == 0 && direction == LEFT) {
+                if (X_PADDLE == 0 && direction == LEFT) {
                     return; //paddle stop moving to the left when it touch the left wall
                 }
                 if (direction == RIGHT) {
-                    xPaddle++;
+                    X_PADDLE++;
                 } else {
-                    xPaddle--;
+                    X_PADDLE--;
                 }
-                centerPaddleX = xPaddle + (double) PADDLE_WIDTH / 2;
+                X_PADDLE_CENTER = X_PADDLE + (double) PADDLE_WIDTH / 2;
                 try {
                     Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
@@ -142,118 +141,118 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     }
 
     // Reset collision flags
-    private void resetCollisionStates() {
-
-        collideToPaddle = false;
-        collideToPaddleAndMoveToRight = false;
-        collideToRightWall = false;
-        collideToLeftWall = false;
-
-        collideToRightBlock = false;
-        collideToBottomBlock = false;
-        collideToLeftBlock = false;
-        collideToTopBlock = false;
-    }
+//    private void resetCollisionStates() {
+//
+//        collideToPaddle = false;
+//        collideToPaddleAndMoveToRight = false;
+//        collideToRightWall = false;
+//        collideToLeftWall = false;
+//
+//        collideToRightBlock = false;
+//        collideToBottomBlock = false;
+//        collideToLeftBlock = false;
+//        collideToTopBlock = false;
+//    }
 
     // Handle physics for the game ball
-    private void updateBallMovement() {
-
-        if (goDownBall) {
-            ball.setYBall(ball.getYBall() + vY);
-        } else {
-            ball.setYBall(ball.getYBall() - vY);
-        }
-
-        if (goRightBall) {
-            ball.setXBall(ball.getXBall() + vX);
-        } else {
-            ball.setXBall(ball.getXBall() - vX);
-        }
-
-        if (ball.getYBall() <= 0) {
-            vX = 1.000;
-            resetCollisionStates();
-            goDownBall = true;
-            return;
-        }
-        if (ball.getYBall() >= SCENE_HEIGHT) {
-            resetCollisionStates();
-            goDownBall = false;
-            if (!isGoldStatus) {
-                //TODO game-over
-                gameController.setHeart(gameController.getHeart() - 1);
-                new Score().show((double) SCENE_WIDTH / 2, (double) SCENE_HEIGHT / 2, -1, this);
-
-                if (gameController.getHeart() == 0) {
-                    new Score().showGameOver(this);
-                    engine.stop();
-                }
-            }
-        }
-
-        if (ball.getYBall() >= yPaddle - BALL_RADIUS) {
-            if (ball.getXBall() >= xPaddle && ball.getXBall() <= xPaddle + PADDLE_WIDTH) {
-                resetCollisionStates();
-                collideToPaddle = true;
-                goDownBall = false;
-
-                double relation = (ball.getXBall() - centerPaddleX) / ((double) PADDLE_WIDTH / 2);
-
-                if (Math.abs(relation) <= 0.3) {
-                    vX = Math.abs(relation);
-                } else if (Math.abs(relation) > 0.3 && Math.abs(relation) <= 0.7) {
-                    vX = (Math.abs(relation) * 1.5) + (gameController.getLevel() / 3.500);
-                } else {
-                    vX = (Math.abs(relation) * 2) + (gameController.getLevel() / 3.500);
-                }
-
-                collideToPaddleAndMoveToRight = ball.getXBall() - centerPaddleX > 0;
-            }
-        }
-
-        if (ball.getXBall() >= SCENE_WIDTH) {
-            resetCollisionStates();
-            collideToRightWall = true;
-        }
-
-        if (ball.getXBall() <= 0) {
-            resetCollisionStates();
-            collideToLeftWall = true;
-        }
-
-        if (collideToPaddle) {
-            goRightBall = collideToPaddleAndMoveToRight;
-        }
-
-        //Wall Collide
-        if (collideToRightWall) {
-            goRightBall = false;
-        }
-        if (collideToLeftWall) {
-            goRightBall = true;
-        }
-
-        //Block Collide
-        if (collideToRightBlock) {
-            resetCollisionStates();
-            goRightBall = true;
-        }
-
-        if (collideToLeftBlock) {
-            resetCollisionStates();
-            goRightBall = false;
-        }
-
-        if (collideToTopBlock) {
-            resetCollisionStates();
-            goDownBall = false;
-        }
-
-        if (collideToBottomBlock) {
-            resetCollisionStates();
-            goDownBall = true;
-        }
-    }
+//    private void updateBallMovement() {
+//
+//        if (goDownBall) {
+//            ball.setYBall(ball.getYBall() + vY);
+//        } else {
+//            ball.setYBall(ball.getYBall() - vY);
+//        }
+//
+//        if (goRightBall) {
+//            ball.setXBall(ball.getXBall() + vX);
+//        } else {
+//            ball.setXBall(ball.getXBall() - vX);
+//        }
+//
+//        if (ball.getYBall() <= 0) {
+//            vX = 1.000;
+//            ball.resetCollisionStates();
+//            goDownBall = true;
+//            return;
+//        }
+//        if (ball.getYBall() >= SCENE_HEIGHT) {
+//            resetCollisionStates();
+//            goDownBall = false;
+//            if (!isGoldStatus) {
+//                //TODO game-over
+//                gameController.setHeart(gameController.getHeart() - 1);
+//                new Score().show((double) SCENE_WIDTH / 2, (double) SCENE_HEIGHT / 2, -1, this);
+//
+//                if (gameController.getHeart() == 0) {
+//                    new Score().showGameOver(this);
+//                    engine.stop();
+//                }
+//            }
+//        }
+//
+//        if (ball.getYBall() >= yPaddle - BALL_RADIUS) {
+//            if (ball.getXBall() >= xPaddle && ball.getXBall() <= xPaddle + PADDLE_WIDTH) {
+//                resetCollisionStates();
+//                collideToPaddle = true;
+//                goDownBall = false;
+//
+//                double relation = (ball.getXBall() - centerPaddleX) / ((double) PADDLE_WIDTH / 2);
+//
+//                if (Math.abs(relation) <= 0.3) {
+//                    vX = Math.abs(relation);
+//                } else if (Math.abs(relation) > 0.3 && Math.abs(relation) <= 0.7) {
+//                    vX = (Math.abs(relation) * 1.5) + (gameController.getLevel() / 3.500);
+//                } else {
+//                    vX = (Math.abs(relation) * 2) + (gameController.getLevel() / 3.500);
+//                }
+//
+//                collideToPaddleAndMoveToRight = ball.getXBall() - centerPaddleX > 0;
+//            }
+//        }
+//
+//        if (ball.getXBall() >= SCENE_WIDTH) {
+//            resetCollisionStates();
+//            collideToRightWall = true;
+//        }
+//
+//        if (ball.getXBall() <= 0) {
+//            resetCollisionStates();
+//            collideToLeftWall = true;
+//        }
+//
+//        if (collideToPaddle) {
+//            goRightBall = collideToPaddleAndMoveToRight;
+//        }
+//
+//        //Wall Collide
+//        if (collideToRightWall) {
+//            goRightBall = false;
+//        }
+//        if (collideToLeftWall) {
+//            goRightBall = true;
+//        }
+//
+//        //Block Collide
+//        if (collideToRightBlock) {
+//            resetCollisionStates();
+//            goRightBall = true;
+//        }
+//
+//        if (collideToLeftBlock) {
+//            resetCollisionStates();
+//            goRightBall = false;
+//        }
+//
+//        if (collideToTopBlock) {
+//            resetCollisionStates();
+//            goDownBall = false;
+//        }
+//
+//        if (collideToBottomBlock) {
+//            resetCollisionStates();
+//            goDownBall = true;
+//        }
+//    }
 
     // Save the game state to a file
     private void saveCurrentGameState() {
@@ -271,25 +270,25 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
                 outputStream.writeDouble(ball.getXBall());
                 outputStream.writeDouble(ball.getYBall());
-                outputStream.writeDouble(xPaddle);
-                outputStream.writeDouble(yPaddle);
-                outputStream.writeDouble(centerPaddleX);
+                outputStream.writeDouble(X_PADDLE);
+                outputStream.writeDouble(Y_PADDLE);
+                outputStream.writeDouble(X_PADDLE_CENTER);
                 outputStream.writeLong(time);
                 outputStream.writeLong(goldTime);
-                outputStream.writeDouble(vX);
+                outputStream.writeDouble(ball.getVX());
 
                 outputStream.writeBoolean(gameController.isExistHeartBlock());
-                outputStream.writeBoolean(isGoldStatus);
-                outputStream.writeBoolean(goDownBall);
-                outputStream.writeBoolean(goRightBall);
-                outputStream.writeBoolean(collideToPaddle);
-                outputStream.writeBoolean(collideToPaddleAndMoveToRight);
-                outputStream.writeBoolean(collideToRightWall);
-                outputStream.writeBoolean(collideToLeftWall);
-                outputStream.writeBoolean(collideToRightBlock);
-                outputStream.writeBoolean(collideToBottomBlock);
-                outputStream.writeBoolean(collideToLeftBlock);
-                outputStream.writeBoolean(collideToTopBlock);
+                outputStream.writeBoolean(ball.isGoldStatus());
+                outputStream.writeBoolean(ball.isGoDownBall());
+                outputStream.writeBoolean(ball.isGoRightBall());
+                outputStream.writeBoolean(ball.isCollideToPaddle());
+                outputStream.writeBoolean(ball.isCollideToPaddleAndMoveToRight());
+                outputStream.writeBoolean(ball.isCollideToRightWall());
+                outputStream.writeBoolean(ball.isCollideToLeftWall());
+                outputStream.writeBoolean(ball.isCollideToRightBlock());
+                outputStream.writeBoolean(ball.isCollideToBottomBlock());
+                outputStream.writeBoolean(ball.isCollideToLeftBlock());
+                outputStream.writeBoolean(ball.isCollideToTopBlock());
 
                 // Save blocks
                 outputStream.writeInt(blocks.size()); // Write the size of the block list
@@ -326,29 +325,29 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
         // Load game state from the saved data
         gameController.setExistHeartBlock(loadSave.isExistHeartBlock);
-        isGoldStatus = loadSave.isGoldStatus;
-        goDownBall = loadSave.goDownBall;
-        goRightBall = loadSave.goRightBall;
-        collideToPaddle = loadSave.collideToBreak;
-        collideToPaddleAndMoveToRight = loadSave.collideToBreakAndMoveToRight;
-        collideToRightWall = loadSave.collideToRightWall;
-        collideToLeftWall = loadSave.collideToLeftWall;
-        collideToRightBlock = loadSave.collideToRightBlock;
-        collideToBottomBlock = loadSave.collideToBottomBlock;
-        collideToLeftBlock = loadSave.collideToLeftBlock;
-        collideToTopBlock = loadSave.collideToTopBlock;
+        ball.setGoldStatus(loadSave.isGoldStatus);
+        ball.setGoDownBall(loadSave.goDownBall);
+        ball.setGoRightBall((loadSave.goRightBall));
+        ball.setCollideToPaddle(loadSave.collideToPaddle);
+        ball.setCollideToPaddleAndMoveToRight(loadSave.collideToPaddleAndMoveToRight);
+        ball.setCollideToRightWall(loadSave.collideToRightWall);
+        ball.setCollideToLeftWall(loadSave.collideToLeftWall);
+        ball.setCollideToRightBlock(loadSave.collideToRightBlock);
+        ball.setCollideToBottomBlock(loadSave.collideToBottomBlock);
+        ball.setCollideToLeftBlock(loadSave.collideToLeftBlock);
+        ball.setCollideToTopBlock(loadSave.collideToTopBlock);
         gameController.setLevel(loadSave.level);
         gameController.setScore(loadSave.score);
         gameController.setHeart(loadSave.heart);
         destroyedBlockCount = loadSave.destroyedBlockCount;
         ball.setXBall(loadSave.xBall);
         ball.setYBall(loadSave.yBall);
-        xPaddle = loadSave.xBreak;
-        yPaddle = loadSave.yBreak;
-        centerPaddleX = loadSave.centerBreakX;
+        X_PADDLE = loadSave.xPaddle;
+        Y_PADDLE = loadSave.yPaddle;
+        X_PADDLE_CENTER = loadSave.centerPaddleX;
         time = loadSave.time;
         goldTime = loadSave.goldTime;
-        vX = loadSave.vX;
+        ball.setVX(loadSave.vX);
 
         blocks.clear();
         bonuses.clear();
@@ -379,11 +378,11 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         Platform.runLater(() -> {
             try {
                 // Reset variables for the next level
-                vX = 1.000;
+                ball.setVX(1.000);
                 engine.stop();
-                resetCollisionStates();
-                goDownBall = true;
-                isGoldStatus = false;
+                ball.resetCollisionStates();
+                ball.setGoDownBall(true);
+                ball.setGoldStatus(false);
                 gameController.setExistHeartBlock(false);
                 time = 0;
                 goldTime = 0;
@@ -513,12 +512,11 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             gameController.setLevel(0);
             gameController.setHeart(1000);
             gameController.setScore(0);
-            vX = 1.000;
+            ball.setVX(1.000);
             destroyedBlockCount = 0;
-            resetCollisionStates();
-            goDownBall = true;
-
-            isGoldStatus = false;
+            ball.resetCollisionStates();
+            ball.setGoDownBall(true);
+            ball.setGoldStatus(false);
             gameController.setExistHeartBlock(false);
             time = 0;
             goldTime = 0;
@@ -540,8 +538,8 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             scoreLabel.setText("Score: " + gameController.getScore());
             heartLabel.setText("Heart : " + gameController.getHeart());
 
-            paddle.setX(xPaddle);
-            paddle.setY(yPaddle);
+            paddle.setX(X_PADDLE);
+            paddle.setY(Y_PADDLE);
             ball.setCenterX(ball.getXBall());
             ball.setCenterY(ball.getYBall());
 
@@ -566,7 +564,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                     block.rect.setVisible(false);
                     block.isDestroyed = true;
                     destroyedBlockCount++;
-                    resetCollisionStates();
+                    ball.resetCollisionStates();
 
                     if (block.type == Block.BLOCK_CHOCO) {
                         final Bonus choco = new Bonus(block.row, block.column);
@@ -579,7 +577,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                         goldTime = time;
                         ball.setFill(new ImagePattern(new Image("goldball.png")));
                         root.getStyleClass().add("goldRoot");
-                        isGoldStatus = true;
+                        ball.setGoldStatus(true);
                     }
 
                     if (block.type == Block.BLOCK_HEART) {
@@ -587,13 +585,13 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                     }
 
                     if (hitCode == Block.HIT_RIGHT) {
-                        collideToRightBlock = true;
+                        ball.setCollideToRightBlock(true);
                     } else if (hitCode == Block.HIT_BOTTOM) {
-                        collideToBottomBlock = true;
+                        ball.setCollideToBottomBlock(true);
                     } else if (hitCode == Block.HIT_LEFT) {
-                        collideToLeftBlock = true;
+                        ball.setCollideToLeftBlock(true);
                     } else if (hitCode == Block.HIT_TOP) {
-                        collideToTopBlock = true;
+                        ball.setCollideToTopBlock(true);
                     }
 
                 }
@@ -611,19 +609,19 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     @Override
     public void performPhysicsCalculations() {
-        updateBallMovement();
+        ball.updateBallMovement(this, gameController, engine);
 
         if (time - goldTime > 5000) {
             ball.setFill(new ImagePattern(new Image("ball.png")));
             root.getStyleClass().remove("goldRoot");
-            isGoldStatus = false;
+            ball.setGoldStatus(false);
         }
 
         for (Bonus choco : bonuses) {
             if (choco.y > SCENE_HEIGHT || choco.taken) {
                 continue;
             }
-            if (choco.y >= yPaddle && choco.y <= yPaddle + PADDLE_HEIGHT && choco.x >= xPaddle && choco.x <= xPaddle + PADDLE_WIDTH) {
+            if (choco.y >= Y_PADDLE && choco.y <= Y_PADDLE + PADDLE_HEIGHT && choco.x >= X_PADDLE && choco.x <= X_PADDLE + PADDLE_WIDTH) {
                 choco.taken = true;
                 choco.choco.setVisible(false);
                 gameController.setScore(gameController.getScore() + 3);

@@ -17,8 +17,8 @@ public class LoadSave {
     public boolean isGoldStatus;
     public boolean goDownBall;
     public boolean goRightBall;
-    public boolean collideToBreak;
-    public boolean collideToBreakAndMoveToRight;
+    public boolean collideToPaddle;
+    public boolean collideToPaddleAndMoveToRight;
     public boolean collideToRightWall;
     public boolean collideToLeftWall;
     public boolean collideToRightBlock;
@@ -33,9 +33,9 @@ public class LoadSave {
     public int destroyedBlockCount;
     public double xBall;
     public double yBall;
-    public double xBreak;
-    public double yBreak;
-    public double centerBreakX;
+    public double xPaddle;
+    public double yPaddle;
+    public double centerPaddleX;
     public long time;
     public long goldTime;
     public double vX;
@@ -55,9 +55,9 @@ public class LoadSave {
 
             xBall = inputStream.readDouble();
             yBall = inputStream.readDouble();
-            xBreak = inputStream.readDouble();
-            yBreak = inputStream.readDouble();
-            centerBreakX = inputStream.readDouble();
+            xPaddle = inputStream.readDouble();
+            yPaddle = inputStream.readDouble();
+            centerPaddleX = inputStream.readDouble();
             time = inputStream.readLong();
             goldTime = inputStream.readLong();
             vX = inputStream.readDouble();
@@ -67,8 +67,8 @@ public class LoadSave {
             isGoldStatus = inputStream.readBoolean();
             goDownBall = inputStream.readBoolean();
             goRightBall = inputStream.readBoolean();
-            collideToBreak = inputStream.readBoolean();
-            collideToBreakAndMoveToRight = inputStream.readBoolean();
+            collideToPaddle = inputStream.readBoolean();
+            collideToPaddleAndMoveToRight = inputStream.readBoolean();
             collideToRightWall = inputStream.readBoolean();
             collideToLeftWall = inputStream.readBoolean();
             collideToRightBlock = inputStream.readBoolean();
