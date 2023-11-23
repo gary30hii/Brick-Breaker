@@ -1,6 +1,7 @@
 package brickGame.controller;
 
 import brickGame.Main;
+import brickGame.model.Ball;
 import brickGame.model.Block;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
@@ -33,9 +34,8 @@ public class GameController {
     };
 
 //    private Circle ball;
-    private double xBall;
-    private double yBall;
-    private final int ballRadius = 10;
+//    private double xBall;
+//    private double yBall;
     private Pane root; // The root pane where game elements are added
     private final int paddleWidth = 130;
     private final int paddleHeight = 30;
@@ -65,14 +65,6 @@ public class GameController {
         return heart;
     }
 
-    public double getXBall() {
-        return xBall;
-    }
-
-    public double getYBall() {
-        return yBall;
-    }
-
     public boolean isExistHeartBlock() {
         return isExistHeartBlock;
     }
@@ -87,14 +79,6 @@ public class GameController {
 
     public void setHeart(int heart) {
         this.heart = heart;
-    }
-
-    public void setXBall(double xBall) {
-        this.xBall = xBall;
-    }
-
-    public void setYBall(double yBall) {
-        this.yBall = yBall;
     }
 
     public void setExistHeartBlock(boolean existHeartBlock) {
@@ -148,13 +132,12 @@ public class GameController {
     }
 
     // Initialize the game ball
-    public void initBall(Circle ball) {
+    public Ball initBall() {
         Random random = new Random();
-        xBall = random.nextInt(Main.SCENE_WIDTH) + 1;
-        int minY = Block.getPaddingTop() + (getLevel() + 1) * Block.getHeight() + ballRadius;
-        int maxY = Main.SCENE_HEIGHT - ballRadius;
-        yBall = Math.max(minY, Math.min(random.nextInt(Main.SCENE_HEIGHT - 200) + minY, maxY));
-        ball.setRadius(ballRadius);
-        ball.setFill(new ImagePattern(new Image("ball.png")));
+        int xBall = random.nextInt(Main.SCENE_WIDTH) + 1;
+        int minY = Block.getPaddingTop() + (getLevel() + 1) * Block.getHeight() + Main.BALL_RADIUS;
+        int maxY = Main.SCENE_HEIGHT - Main.BALL_RADIUS;
+        int yBall = Math.max(minY, Math.min(random.nextInt(Main.SCENE_HEIGHT - 200) + minY, maxY));
+        return new Ball(xBall, yBall);
     }
 }

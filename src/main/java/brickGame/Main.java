@@ -3,6 +3,7 @@ package brickGame;
 import brickGame.controller.GameController;
 import brickGame.controller.Score;
 import brickGame.engine.GameEngine;
+import brickGame.model.Ball;
 import brickGame.model.Block;
 import brickGame.model.BlockSerializable;
 import brickGame.model.Bonus;
@@ -17,7 +18,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     // Constants
     public static final int LEFT = 1, RIGHT = 2, SCENE_WIDTH = 500, SCENE_HEIGHT = 700;
-    private static final int PADDLE_WIDTH = 130, PADDLE_HEIGHT = 30, BALL_RADIUS = 10;
+    public static final int PADDLE_WIDTH = 130, PADDLE_HEIGHT = 30, BALL_RADIUS = 10;
     public static final String SAVE_PATH = "data/save.mdds", SAVE_PATH_DIR = "data/";
 
     // Game variables
@@ -48,7 +48,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private boolean collideToPaddle, collideToPaddleAndMoveToRight, collideToRightWall, collideToLeftWall;
     private boolean collideToRightBlock, collideToBottomBlock, collideToLeftBlock, collideToTopBlock;
 
-    private Circle ball;
+    private Ball ball;
     private Rectangle paddle;
     public Pane root;
     private Label scoreLabel, heartLabel, levelLabel;
@@ -71,7 +71,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private void initializeGameStage() {
         root = new Pane();
         paddle = new Rectangle();
-        ball = new Circle();
+//        ball = new Circle();
         if (!loadFromSave) {
             gameController = new GameController(0, 0, 100, root);
             levelUp();
@@ -159,24 +159,24 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private void updateBallMovement() {
 
         if (goDownBall) {
-            gameController.setYBall(gameController.getYBall() + vY);
+            ball.setYBall(ball.getYBall() + vY);
         } else {
-            gameController.setYBall(gameController.getYBall() - vY);
+            ball.setYBall(ball.getYBall() - vY);
         }
 
         if (goRightBall) {
-            gameController.setXBall(gameController.getXBall() + vX);
+            ball.setXBall(ball.getXBall() + vX);
         } else {
-            gameController.setXBall(gameController.getXBall() - vX);
+            ball.setXBall(ball.getXBall() - vX);
         }
 
-        if (gameController.getYBall() <= 0) {
+        if (ball.getYBall() <= 0) {
             vX = 1.000;
             resetCollisionStates();
             goDownBall = true;
             return;
         }
-        if (gameController.getYBall() >= SCENE_HEIGHT) {
+        if (ball.getYBall() >= SCENE_HEIGHT) {
             resetCollisionStates();
             goDownBall = false;
             if (!isGoldStatus) {
@@ -191,13 +191,13 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             }
         }
 
-        if (gameController.getYBall() >= yPaddle - BALL_RADIUS) {
-            if (gameController.getXBall() >= xPaddle && gameController.getXBall() <= xPaddle + PADDLE_WIDTH) {
+        if (ball.getYBall() >= yPaddle - BALL_RADIUS) {
+            if (ball.getXBall() >= xPaddle && ball.getXBall() <= xPaddle + PADDLE_WIDTH) {
                 resetCollisionStates();
                 collideToPaddle = true;
                 goDownBall = false;
 
-                double relation = (gameController.getXBall() - centerPaddleX) / ((double) PADDLE_WIDTH / 2);
+                double relation = (ball.getXBall() - centerPaddleX) / ((double) PADDLE_WIDTH / 2);
 
                 if (Math.abs(relation) <= 0.3) {
                     vX = Math.abs(relation);
@@ -207,16 +207,16 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                     vX = (Math.abs(relation) * 2) + (gameController.getLevel() / 3.500);
                 }
 
-                collideToPaddleAndMoveToRight = gameController.getXBall() - centerPaddleX > 0;
+                collideToPaddleAndMoveToRight = ball.getXBall() - centerPaddleX > 0;
             }
         }
 
-        if (gameController.getXBall() >= SCENE_WIDTH) {
+        if (ball.getXBall() >= SCENE_WIDTH) {
             resetCollisionStates();
             collideToRightWall = true;
         }
 
-        if (gameController.getXBall() <= 0) {
+        if (ball.getXBall() <= 0) {
             resetCollisionStates();
             collideToLeftWall = true;
         }
@@ -269,8 +269,8 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 outputStream.writeInt(gameController.getHeart());
                 outputStream.writeInt(destroyedBlockCount);
 
-                outputStream.writeDouble(gameController.getXBall());
-                outputStream.writeDouble(gameController.getYBall());
+                outputStream.writeDouble(ball.getXBall());
+                outputStream.writeDouble(ball.getYBall());
                 outputStream.writeDouble(xPaddle);
                 outputStream.writeDouble(yPaddle);
                 outputStream.writeDouble(centerPaddleX);
@@ -341,8 +341,8 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         gameController.setScore(loadSave.score);
         gameController.setHeart(loadSave.heart);
         destroyedBlockCount = loadSave.destroyedBlockCount;
-        gameController.setXBall(loadSave.xBall);
-        gameController.setYBall(loadSave.yBall);
+        ball.setXBall(loadSave.xBall);
+        ball.setYBall(loadSave.yBall);
         xPaddle = loadSave.xBreak;
         yPaddle = loadSave.yBreak;
         centerPaddleX = loadSave.centerBreakX;
@@ -366,8 +366,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             // Reinitialize the paddle and add it to the root pane
             paddle = new Rectangle();
             gameController.initPaddle(paddle);
-            ball = new Circle();
-            gameController.initBall(ball);
+            ball = gameController.initBall();
             root.getChildren().addAll(paddle, ball);
         } catch (Exception e) {
             logger.error("An error occurred in loadSavedGameState() Method: " + e.getMessage(), e);
@@ -422,7 +421,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     }
 
     private void initializeGameElements() {
-        gameController.initBall(ball);
+        ball = gameController.initBall();
         gameController.initPaddle(paddle);
         gameController.initBoard(blocks);
     }
@@ -504,7 +503,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
         if (gameController.getLevel() == 18) {
             new Score().showWin(this);
-            return;
         }
     }
 
@@ -544,8 +542,8 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
             paddle.setX(xPaddle);
             paddle.setY(yPaddle);
-            ball.setCenterX(gameController.getXBall());
-            ball.setCenterY(gameController.getYBall());
+            ball.setCenterX(ball.getXBall());
+            ball.setCenterY(ball.getYBall());
 
             for (Bonus choco : bonuses) {
                 choco.choco.setY(choco.y);
@@ -557,9 +555,9 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         });
 
 
-        if (gameController.getYBall() >= Block.getPaddingTop() && gameController.getYBall() <= (Block.getHeight() * (gameController.getLevel() + 1)) + Block.getPaddingTop()) {
+        if (ball.getYBall() >= Block.getPaddingTop() && ball.getYBall() <= (Block.getHeight() * (gameController.getLevel() + 1)) + Block.getPaddingTop()) {
             for (final Block block : blocks) {
-                int hitCode = block.checkHitToBlock(gameController.getXBall(), gameController.getYBall(), BALL_RADIUS);
+                int hitCode = block.checkHitToBlock(ball.getXBall(), ball.getYBall(), BALL_RADIUS);
                 if (hitCode != Block.NO_HIT) {
                     gameController.setScore(gameController.getScore() + 1);
 
