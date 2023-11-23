@@ -1,11 +1,11 @@
 package brickGame;
 
+import brickGame.controller.FileController;
 import brickGame.controller.GameController;
 import brickGame.controller.Score;
 import brickGame.engine.GameEngine;
 import brickGame.model.Ball;
 import brickGame.model.Block;
-import brickGame.model.BlockSerializable;
 import brickGame.model.Bonus;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -23,9 +23,7 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
 import java.util.ArrayList;
-import java.util.Random;
 
 public class Main extends Application implements EventHandler<KeyEvent>, GameEngine.OnAction {
 
@@ -40,12 +38,9 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     public static double X_PADDLE = (double) SCENE_WIDTH / 2 - (double) PADDLE_WIDTH / 2;
     public static double Y_PADDLE = 640.0;
     public static double X_PADDLE_CENTER;
-    private long time, goldTime;
-    private int destroyedBlockCount;
-    private boolean loadFromSave;
-//    private boolean loadFromSave, goDownBall = true, goRightBall = true, isGoldStatus;
-//    private boolean collideToPaddle, collideToPaddleAndMoveToRight, collideToRightWall, collideToLeftWall;
-//    private boolean collideToRightBlock, collideToBottomBlock, collideToLeftBlock, collideToTopBlock;
+    public long time, goldTime;
+    public int destroyedBlockCount;
+    public boolean loadFromSave;
 
     private Ball ball;
     private Rectangle paddle;
@@ -56,9 +51,10 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     private GameEngine engine;
     private GameController gameController;
-    private final ArrayList<Block> blocks = new ArrayList<>();
-    private final ArrayList<Bonus> bonuses = new ArrayList<>();
-    private final Color[] COLORS = initializeColors();
+    private FileController fileController;
+    public final ArrayList<Block> blocks = new ArrayList<>();
+    public final ArrayList<Bonus> bonuses = new ArrayList<>();
+    public final Color[] COLORS = initializeColors();
 
     // Initialize the game and UI elements
     @Override
@@ -70,7 +66,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private void initializeGameStage() {
         root = new Pane();
         paddle = new Rectangle();
-//        ball = new Circle();
+        fileController = new FileController();
         if (!loadFromSave) {
             gameController = new GameController(0, 0, 100, root);
             levelUp();
@@ -106,7 +102,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 movePaddle(RIGHT);
                 break;
             case S:
-                saveCurrentGameState();
+                fileController.saveCurrentGameState(this, gameController, ball);
                 break;
         }
     }
@@ -138,239 +134,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 }
             }
         }).start();
-    }
-
-    // Reset collision flags
-//    private void resetCollisionStates() {
-//
-//        collideToPaddle = false;
-//        collideToPaddleAndMoveToRight = false;
-//        collideToRightWall = false;
-//        collideToLeftWall = false;
-//
-//        collideToRightBlock = false;
-//        collideToBottomBlock = false;
-//        collideToLeftBlock = false;
-//        collideToTopBlock = false;
-//    }
-
-    // Handle physics for the game ball
-//    private void updateBallMovement() {
-//
-//        if (goDownBall) {
-//            ball.setYBall(ball.getYBall() + vY);
-//        } else {
-//            ball.setYBall(ball.getYBall() - vY);
-//        }
-//
-//        if (goRightBall) {
-//            ball.setXBall(ball.getXBall() + vX);
-//        } else {
-//            ball.setXBall(ball.getXBall() - vX);
-//        }
-//
-//        if (ball.getYBall() <= 0) {
-//            vX = 1.000;
-//            ball.resetCollisionStates();
-//            goDownBall = true;
-//            return;
-//        }
-//        if (ball.getYBall() >= SCENE_HEIGHT) {
-//            resetCollisionStates();
-//            goDownBall = false;
-//            if (!isGoldStatus) {
-//                //TODO game-over
-//                gameController.setHeart(gameController.getHeart() - 1);
-//                new Score().show((double) SCENE_WIDTH / 2, (double) SCENE_HEIGHT / 2, -1, this);
-//
-//                if (gameController.getHeart() == 0) {
-//                    new Score().showGameOver(this);
-//                    engine.stop();
-//                }
-//            }
-//        }
-//
-//        if (ball.getYBall() >= yPaddle - BALL_RADIUS) {
-//            if (ball.getXBall() >= xPaddle && ball.getXBall() <= xPaddle + PADDLE_WIDTH) {
-//                resetCollisionStates();
-//                collideToPaddle = true;
-//                goDownBall = false;
-//
-//                double relation = (ball.getXBall() - centerPaddleX) / ((double) PADDLE_WIDTH / 2);
-//
-//                if (Math.abs(relation) <= 0.3) {
-//                    vX = Math.abs(relation);
-//                } else if (Math.abs(relation) > 0.3 && Math.abs(relation) <= 0.7) {
-//                    vX = (Math.abs(relation) * 1.5) + (gameController.getLevel() / 3.500);
-//                } else {
-//                    vX = (Math.abs(relation) * 2) + (gameController.getLevel() / 3.500);
-//                }
-//
-//                collideToPaddleAndMoveToRight = ball.getXBall() - centerPaddleX > 0;
-//            }
-//        }
-//
-//        if (ball.getXBall() >= SCENE_WIDTH) {
-//            resetCollisionStates();
-//            collideToRightWall = true;
-//        }
-//
-//        if (ball.getXBall() <= 0) {
-//            resetCollisionStates();
-//            collideToLeftWall = true;
-//        }
-//
-//        if (collideToPaddle) {
-//            goRightBall = collideToPaddleAndMoveToRight;
-//        }
-//
-//        //Wall Collide
-//        if (collideToRightWall) {
-//            goRightBall = false;
-//        }
-//        if (collideToLeftWall) {
-//            goRightBall = true;
-//        }
-//
-//        //Block Collide
-//        if (collideToRightBlock) {
-//            resetCollisionStates();
-//            goRightBall = true;
-//        }
-//
-//        if (collideToLeftBlock) {
-//            resetCollisionStates();
-//            goRightBall = false;
-//        }
-//
-//        if (collideToTopBlock) {
-//            resetCollisionStates();
-//            goDownBall = false;
-//        }
-//
-//        if (collideToBottomBlock) {
-//            resetCollisionStates();
-//            goDownBall = true;
-//        }
-//    }
-
-    // Save the game state to a file
-    private void saveCurrentGameState() {
-        new Thread(() -> {
-            new File(SAVE_PATH_DIR);
-            File file = new File(SAVE_PATH);
-            ObjectOutputStream outputStream = null;
-            try {
-                outputStream = new ObjectOutputStream(new FileOutputStream(file));
-
-                outputStream.writeInt(gameController.getLevel());
-                outputStream.writeInt(gameController.getScore());
-                outputStream.writeInt(gameController.getHeart());
-                outputStream.writeInt(destroyedBlockCount);
-
-                outputStream.writeDouble(ball.getXBall());
-                outputStream.writeDouble(ball.getYBall());
-                outputStream.writeDouble(X_PADDLE);
-                outputStream.writeDouble(Y_PADDLE);
-                outputStream.writeDouble(X_PADDLE_CENTER);
-                outputStream.writeLong(time);
-                outputStream.writeLong(goldTime);
-                outputStream.writeDouble(ball.getVX());
-
-                outputStream.writeBoolean(gameController.isExistHeartBlock());
-                outputStream.writeBoolean(ball.isGoldStatus());
-                outputStream.writeBoolean(ball.isGoDownBall());
-                outputStream.writeBoolean(ball.isGoRightBall());
-                outputStream.writeBoolean(ball.isCollideToPaddle());
-                outputStream.writeBoolean(ball.isCollideToPaddleAndMoveToRight());
-                outputStream.writeBoolean(ball.isCollideToRightWall());
-                outputStream.writeBoolean(ball.isCollideToLeftWall());
-                outputStream.writeBoolean(ball.isCollideToRightBlock());
-                outputStream.writeBoolean(ball.isCollideToBottomBlock());
-                outputStream.writeBoolean(ball.isCollideToLeftBlock());
-                outputStream.writeBoolean(ball.isCollideToTopBlock());
-
-                // Save blocks
-                outputStream.writeInt(blocks.size()); // Write the size of the block list
-                for (Block block : blocks) {
-                    outputStream.writeInt(block.row);
-                    outputStream.writeInt(block.column);
-                    outputStream.writeInt(block.type);
-                    outputStream.writeBoolean(block.isDestroyed);
-                }
-
-                new Score().showMessage("Game Saved", Main.this);
-
-            } catch (IOException e) {
-                logger.error("An error occurred in saveGame() Method: " + e.getMessage(), e);
-            } finally {
-                try {
-                    if (outputStream != null) {
-                        outputStream.flush(); // Check for null before calling flush
-                        outputStream.close();
-                    }
-                } catch (IOException e) {
-                    logger.error("An error occurred in saveGame() Method: " + e.getMessage(), e);
-                }
-            }
-        }).start();
-
-    }
-
-    // Load a saved game state
-    private void loadSavedGameState() {
-
-        LoadSave loadSave = new LoadSave();
-        loadSave.read();
-
-        // Load game state from the saved data
-        gameController.setExistHeartBlock(loadSave.isExistHeartBlock);
-        ball.setGoldStatus(loadSave.isGoldStatus);
-        ball.setGoDownBall(loadSave.goDownBall);
-        ball.setGoRightBall((loadSave.goRightBall));
-        ball.setCollideToPaddle(loadSave.collideToPaddle);
-        ball.setCollideToPaddleAndMoveToRight(loadSave.collideToPaddleAndMoveToRight);
-        ball.setCollideToRightWall(loadSave.collideToRightWall);
-        ball.setCollideToLeftWall(loadSave.collideToLeftWall);
-        ball.setCollideToRightBlock(loadSave.collideToRightBlock);
-        ball.setCollideToBottomBlock(loadSave.collideToBottomBlock);
-        ball.setCollideToLeftBlock(loadSave.collideToLeftBlock);
-        ball.setCollideToTopBlock(loadSave.collideToTopBlock);
-        gameController.setLevel(loadSave.level);
-        gameController.setScore(loadSave.score);
-        gameController.setHeart(loadSave.heart);
-        destroyedBlockCount = loadSave.destroyedBlockCount;
-        ball.setXBall(loadSave.xBall);
-        ball.setYBall(loadSave.yBall);
-        X_PADDLE = loadSave.xPaddle;
-        Y_PADDLE = loadSave.yPaddle;
-        X_PADDLE_CENTER = loadSave.centerPaddleX;
-        time = loadSave.time;
-        goldTime = loadSave.goldTime;
-        ball.setVX(loadSave.vX);
-
-        blocks.clear();
-        bonuses.clear();
-
-        for (BlockSerializable ser : loadSave.blocks) {
-            int r = new Random().nextInt(200); // Example random color selection
-            Block newBlock = new Block(ser.row, ser.column, COLORS[r % COLORS.length], ser.type, ser.isDestroyed);
-            blocks.add(newBlock);
-            System.out.println(ser.row + " " + ser.column + " " + ser.type + " " + ser.isDestroyed);
-        }
-
-        try {
-            loadFromSave = true;
-            start(primaryStage);
-            // Reinitialize the paddle and add it to the root pane
-            paddle = new Rectangle();
-            gameController.initPaddle(paddle);
-            ball = gameController.initBall();
-            root.getChildren().addAll(paddle, ball);
-        } catch (Exception e) {
-            logger.error("An error occurred in loadSavedGameState() Method: " + e.getMessage(), e);
-        }
-
     }
 
     // Method to prepare for the next game level
@@ -472,7 +235,18 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         }
 
         loadButton.setOnAction(event -> {
-            loadSavedGameState();
+            fileController.loadSavedGameState(this, gameController, ball);
+            try {
+                loadFromSave = true;
+                start(primaryStage);
+                // Reinitialize the paddle and add it to the root pane
+                paddle = new Rectangle();
+                gameController.initPaddle(paddle);
+                ball = gameController.initBall();
+                root.getChildren().addAll(paddle, ball);
+            } catch (Exception e) {
+                logger.error("An error occurred in loadSavedGameState() Method: " + e.getMessage(), e);
+            }
 
             loadButton.setVisible(false);
             newGameButton.setVisible(false);

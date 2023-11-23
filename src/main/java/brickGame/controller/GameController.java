@@ -6,7 +6,6 @@ import brickGame.model.Block;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.layout.Pane;
 import java.util.ArrayList;
@@ -33,16 +32,11 @@ public class GameController {
             Color.TAN,
     };
 
-//    private Circle ball;
-//    private double xBall;
-//    private double yBall;
     private Pane root; // The root pane where game elements are added
     private final int paddleWidth = 130;
     private final int paddleHeight = 30;
     private double xPaddle; // X position of the break
     private double yPaddle = 640.0f; // Y position of the break
-    private boolean isGoldStatus;
-
     private boolean isExistHeartBlock = false;
 
     public GameController(int level, int score, int heart, Pane root) {
