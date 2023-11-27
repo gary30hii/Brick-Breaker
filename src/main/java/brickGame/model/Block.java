@@ -1,4 +1,4 @@
-package brickGame;
+package brickGame.model;
 
 
 import javafx.scene.image.Image;
@@ -9,25 +9,21 @@ import javafx.scene.shape.Rectangle;
 import java.io.Serializable;
 
 public class Block implements Serializable {
-    private static final Block block = new Block(-1, -1, Color.TRANSPARENT, 99);
 
     public int row;
     public int column;
-
-    public boolean isDestroyed = false;
-
-    private final Color color;
+    public boolean isDestroyed;
+    public final Color color;
     public int type;
 
     public int x;
     public int y;
 
-    private final int width = 100;
-    private final int height = 30;
-    private final int paddingTop = height * 2;
-    private final int paddingH = 50;
+    public static final int width = 100;
+    public static final int height = 30;
+    public static final int paddingTop = height * 2;
+    public static final int paddingH = 50;
     public Rectangle rect;
-
 
     public static int NO_HIT = -1;
     public static int HIT_RIGHT = 0;
@@ -41,12 +37,12 @@ public class Block implements Serializable {
     public static int BLOCK_HEART = 102;
 
 
-    public Block(int row, int column, Color color, int type) {
+    public Block(int row, int column, Color color, int type, boolean isDestroyed) {
         this.row = row;
         this.column = column;
         this.color = color;
         this.type = type;
-
+        this.isDestroyed = isDestroyed;
         draw();
     }
 
@@ -56,6 +52,7 @@ public class Block implements Serializable {
         y = (row * height) + paddingTop;
 
         rect = new Rectangle();
+        rect.setVisible(true);
         rect.setWidth(width);
         rect.setHeight(height);
         rect.setX(x);
@@ -81,6 +78,7 @@ public class Block implements Serializable {
 
     /**
      * Checks if the ball hits the block and returns the hit direction.
+     *
      * @param xBall The x-coordinate of the ball.
      * @param yBall The y-coordinate of the ball.
      * @return The hit direction: HIT_BOTTOM, HIT_TOP, HIT_RIGHT, HIT_LEFT, or NO_HIT.
@@ -98,8 +96,8 @@ public class Block implements Serializable {
         double dx = ballCenterX - blockCenterX;
         double dy = ballCenterY - blockCenterY;
 
-        double combinedHalfWidths = (ballRadius + width) / 2;
-        double combinedHalfHeights = (ballRadius + height) / 2;
+        double combinedHalfWidths = ballRadius + (double) width / 2;
+        double combinedHalfHeights = ballRadius + (double) height / 2;
 
         if (Math.abs(dx) <= combinedHalfWidths && Math.abs(dy) <= combinedHalfHeights) {
             double overlapX = combinedHalfWidths - Math.abs(dx);
@@ -107,18 +105,14 @@ public class Block implements Serializable {
 
             if (overlapX >= overlapY) {
                 if (dy > 0) {
-                    System.out.println("bottom");
                     return HIT_BOTTOM; // Ball hit the bottom of the block.
                 } else {
-                    System.out.println("top");
                     return HIT_TOP; // Ball hit the top of the block.
                 }
             } else {
                 if (dx > 0) {
-                    System.out.println("right");
                     return HIT_RIGHT; // Ball hit the right side of the block.
                 } else {
-                    System.out.println("left");
                     return HIT_LEFT; // Ball hit the left side of the block.
                 }
             }
@@ -128,19 +122,19 @@ public class Block implements Serializable {
     }
 
     public static int getPaddingTop() {
-        return block.paddingTop;
+        return Block.paddingTop;
     }
 
     public static int getPaddingH() {
-        return block.paddingH;
+        return Block.paddingH;
     }
 
     public static int getHeight() {
-        return block.height;
+        return Block.height;
     }
 
     public static int getWidth() {
-        return block.width;
+        return Block.width;
     }
 
 }

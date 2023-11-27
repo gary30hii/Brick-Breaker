@@ -1,5 +1,6 @@
-package brickGame;
+package brickGame.controller;
 
+import brickGame.Main;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.SequentialTransition;
@@ -47,7 +48,7 @@ public class Score {
             Button restart = new Button("Restart");
             restart.setTranslateX(220);
             restart.setTranslateY(300);
-            restart.setOnAction(event -> main.restartGame());
+            restart.setOnAction(event -> main.resetGameToStart());
 
             // Add the "Game Over" label and the restart button to the UI.
             main.root.getChildren().addAll(label, restart);
