@@ -2,6 +2,7 @@ package brickGame;
 
 import brickGame.controller.FileController;
 import brickGame.controller.GameController;
+import brickGame.controller.MenuController;
 import brickGame.controller.Score;
 import brickGame.engine.GameEngine;
 import brickGame.model.Ball;
@@ -10,6 +11,8 @@ import brickGame.model.Bonus;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -18,11 +21,13 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class Main extends Application implements EventHandler<KeyEvent>, GameEngine.OnAction {
@@ -44,6 +49,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     private Ball ball;
     private Rectangle paddle;
+    private Scene scene;
     public Pane root;
     private Label scoreLabel, heartLabel, levelLabel;
     private Stage primaryStage;
@@ -58,13 +64,40 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     // Initialize the game and UI elements
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage) throws IOException {
         this.primaryStage = primaryStage;
-        initializeGameStage();
-    }
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("menu.fxml"));
+        Parent root = loader.load();
 
+        MenuController menuController = loader.getController(); // Get the controller instance
+        menuController.setMainApp(this);
+
+        primaryStage.setTitle("Brick Breaker");
+        scene = new Scene(root);
+        scene.getStylesheets().add("style.css");
+
+        primaryStage.setScene(scene);
+        primaryStage.show();
+
+//        initializeGameStage();
+    }
+    public void switchToGameScene() throws IOException {
+        // Logic to switch to the game scene
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("game.fxml"));
+        Parent gameRoot = loader.load();
+        scene.setRoot(gameRoot);
+
+        // Casting the root to Pane and adding the circle
+        if (gameRoot instanceof Pane) {
+            root = (Pane) gameRoot;
+
+            initializeGameStage();
+        } else {
+            // Handle if the root is not a Pane
+            System.out.println("Root is not a Pane!");
+        }
+    }
     private void initializeGameStage() {
-        root = new Pane();
         paddle = new Rectangle();
         fileController = new FileController();
         if (!loadFromSave) {

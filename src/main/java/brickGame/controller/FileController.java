@@ -56,7 +56,6 @@ public class FileController {
             int r = new Random().nextInt(200); // Example random color selection
             Block newBlock = new Block(ser.row, ser.column, main.COLORS[r % main.COLORS.length], ser.type, ser.isDestroyed);
             main.blocks.add(newBlock);
-            System.out.println(ser.row + " " + ser.column + " " + ser.type + " " + ser.isDestroyed);
         }
     }
 
