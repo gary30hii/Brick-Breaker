@@ -3,6 +3,7 @@ package brickGame;
 import brickGame.controller.FileController;
 import brickGame.controller.GameController;
 import brickGame.controller.MenuController;
+import brickGame.controller.WonController;
 import brickGame.controller.Score;
 import brickGame.engine.GameEngine;
 import brickGame.model.Ball;
@@ -14,12 +15,10 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
@@ -53,14 +52,13 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private Label scoreLabel, heartLabel, levelLabel;
     private Stage primaryStage;
     FXMLLoader loader;
-    private Button loadButton, newGameButton;
-
     private GameEngine engine;
     private GameController gameController;
     private FileController fileController;
     public final ArrayList<Block> blocks = new ArrayList<>();
     public final ArrayList<Bonus> bonuses = new ArrayList<>();
-    public final Color[] COLORS = initializeColors();
+    private final int finalLevel = 3;
+    private int totalScore = 0;
 
     // Initialize the game and UI elements
     @Override
@@ -100,7 +98,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         if (!loadFromSave) {
             levelUp();
             initializeGameElements();
-        } else  {
+        } else {
             initializeGameElements();
             loadGame();
             loadFromSave = false;
@@ -191,14 +189,12 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private void setupNewGameLevel() {
         // Add the initialization logic here
         levelUp();
-        initializeGameElements();
-        initializeAndStartGameEngine();
-        root.getChildren().clear();
-        setUpGameUI();
-        initializeGameWindow();
-
-        if (loadFromSave) {
-            loadFromSave = false;
+        if (gameController != null) {
+            initializeGameElements();
+            initializeAndStartGameEngine();
+            root.getChildren().clear();
+            setUpGameUI();
+            initializeGameWindow();
         }
     }
 
@@ -247,8 +243,9 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             new Score().showMessage("Level Up :)", this);
         }
 
-        if (gameController.getLevel() == 18) {
-            new Score().showWin(this);
+        if (gameController.getLevel() == finalLevel) {
+            resetGameToStart();
+            showWin(totalScore);
         }
     }
 
@@ -256,22 +253,14 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     public void resetGameToStart() {
         try {
             // Reset game variables for a fresh start
-            gameController.setLevel(0);
-            gameController.setHeart(1000);
-            gameController.setScore(0);
-            ball.setVX(1.000);
+            totalScore = gameController.getScore();
+            ball = null;
+            gameController = null;
             destroyedBlockCount = 0;
-            ball.resetCollisionStates();
-            ball.setGoDownBall(true);
-            ball.setGoldStatus(false);
-            gameController.setExistHeartBlock(false);
             time = 0;
             goldTime = 0;
-
             blocks.clear();
             bonuses.clear();
-
-            start(primaryStage);
         } catch (Exception e) {
             logger.error("An error occurred in resetGameToStart() Method: " + e.getMessage(), e);
         }
@@ -294,7 +283,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
                 choco.choco.setY(choco.y);
             }
 
-            if (destroyedBlockCount == blocks.size()) {
+            if (destroyedBlockCount == blocks.size() && gameController.getLevel() < finalLevel) {
                 prepareForNextLevel();
             }
         });
@@ -384,21 +373,27 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         this.time = time;
     }
 
-    private Color[] initializeColors() {
-        return new Color[]{
-                Color.MAGENTA,
-                Color.RED,
-                Color.GOLD,
-                Color.CORAL,
-                Color.AQUA,
-                Color.VIOLET,
-                Color.GREENYELLOW,
-                Color.ORANGE,
-                Color.PINK,
-                Color.SLATEGREY,
-                Color.YELLOW,
-                Color.TOMATO,
-                Color.TAN,
-        };
+    public void showWin(int totalScore) {
+        try {
+            loader = new FXMLLoader(getClass().getResource("won.fxml"));
+            Parent gameRoot = loader.load();
+            WonController wonController = loader.getController(); // Get the controller instance
+            wonController.setMainApp(this, totalScore);
+            scene.setRoot(gameRoot);
+            scene.setOnKeyPressed(this);
+        } catch (IOException e) {
+            // Log the exception details or handle it appropriately
+            logger.error("An error occurred in showGameOver() method: " + e.getMessage(), e);
+        }
+    }
+
+
+    public void switchToMenu() throws IOException {
+        loader = new FXMLLoader(getClass().getResource("menu.fxml"));
+        Parent gameRoot = loader.load();
+        MenuController menuController = loader.getController(); // Get the controller instance
+        menuController.setMainApp(this);
+        scene.setRoot(gameRoot);
+        scene.setOnKeyPressed(this);
     }
 }

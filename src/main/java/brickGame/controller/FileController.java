@@ -5,6 +5,7 @@ import brickGame.Main;
 import brickGame.model.Block;
 import brickGame.model.BlockSerializable;
 import brickGame.model.Ball;
+import javafx.scene.paint.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +55,7 @@ public class FileController {
 
         for (BlockSerializable ser : loadSave.blocks) {
             int r = new Random().nextInt(200); // Example random color selection
-            Block newBlock = new Block(ser.row, ser.column, main.COLORS[r % main.COLORS.length], ser.type, ser.isDestroyed);
+            Block newBlock = new Block(ser.row, ser.column, Color.BLUE, ser.type, ser.isDestroyed);
             main.blocks.add(newBlock);
         }
     }

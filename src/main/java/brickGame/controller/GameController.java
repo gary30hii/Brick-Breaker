@@ -16,22 +16,6 @@ public class GameController {
     private int level;
     private int score;
     private int heart;
-    private final Color[] colors = new Color[]{
-            Color.MAGENTA,
-            Color.RED,
-            Color.GOLD,
-            Color.CORAL,
-            Color.AQUA,
-            Color.VIOLET,
-            Color.GREENYELLOW,
-            Color.ORANGE,
-            Color.PINK,
-            Color.SLATEGREY,
-            Color.YELLOW,
-            Color.TOMATO,
-            Color.TAN,
-    };
-
     private Pane root; // The root pane where game elements are added
     private final int paddleWidth = 130;
     private final int paddleHeight = 30;
@@ -88,7 +72,7 @@ public class GameController {
                     continue; // Empty block
                 }
                 int type = determineBlockType(r);
-                Color color = colors[r % colors.length];
+                Color color = Color.BLUE;
                 blocks.add(new Block(j, i, color, type, false));
             }
         }

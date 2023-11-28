@@ -184,7 +184,8 @@ public class Ball extends Circle implements Serializable {
                 new Score().show((double) Main.SCENE_WIDTH / 2, (double) Main.SCENE_HEIGHT / 2, -1, main);
 
                 if (gameController.getHeart() == 0) {
-                    new Score().showGameOver(main);
+//                    new Score().showGameOver(main);
+                    main.resetGameToStart();
                     engine.stop();
                 }
             }
