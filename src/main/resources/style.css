@@ -5,6 +5,18 @@
     -fx-background-repeat: no-repeat;
 }
 
+.game-background-pane {
+    -fx-background-image: url('game-background.jpg');
+    -fx-background-size: cover;
+    -fx-background-repeat: no-repeat;
+}
+
+.game-gold-background-pane {
+    -fx-background-image: url('gold-game-background.jpg');
+    -fx-background-size: cover;
+    -fx-background-repeat: no-repeat;
+}
+
 /* style.css */
 .main-page-button {
     -fx-min-width: 120px;
@@ -17,15 +29,6 @@
     -fx-border-width: 2px;
     -fx-border-radius: 5px;
     -fx-font-size: 16px;
-}
-
-.root {
-    /* -fx-background-color: #1d1d1d; */
-    -fx-background-color: black;
-}
-
-.goldRoot {
-    -fx-background-color: #4b4a08;
 }
 
 .label {

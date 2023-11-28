@@ -21,7 +21,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -53,6 +52,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     public Pane root;
     private Label scoreLabel, heartLabel, levelLabel;
     private Stage primaryStage;
+    FXMLLoader loader;
     private Button loadButton, newGameButton;
 
     private GameEngine engine;
@@ -66,8 +66,8 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     @Override
     public void start(Stage primaryStage) throws IOException {
         this.primaryStage = primaryStage;
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("menu.fxml"));
-        Parent root = loader.load();
+        loader = new FXMLLoader(getClass().getResource("menu.fxml"));
+        root = loader.load();
 
         MenuController menuController = loader.getController(); // Get the controller instance
         menuController.setMainApp(this);
@@ -78,44 +78,36 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
         primaryStage.setScene(scene);
         primaryStage.show();
-
-//        initializeGameStage();
     }
+
     public void switchToGameScene() throws IOException {
         // Logic to switch to the game scene
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("game.fxml"));
+        loader = new FXMLLoader(getClass().getResource("game.fxml"));
         Parent gameRoot = loader.load();
         scene.setRoot(gameRoot);
+        scene.setOnKeyPressed(this);
 
         // Casting the root to Pane and adding the circle
-        if (gameRoot instanceof Pane) {
-            root = (Pane) gameRoot;
+        root = (Pane) gameRoot;
 
-            initializeGameStage();
-        } else {
-            // Handle if the root is not a Pane
-            System.out.println("Root is not a Pane!");
-        }
+        initializeGameStage();
     }
+
     private void initializeGameStage() {
         paddle = new Rectangle();
         fileController = new FileController();
+        gameController = new GameController(0, 0, 100, root);
         if (!loadFromSave) {
-            gameController = new GameController(0, 0, 100, root);
             levelUp();
             initializeGameElements();
-            setupGameButtons();
-        }
-
-        setUpGameUI();
-        initializeGameWindow();
-
-        if (!loadFromSave) {
-            handleGameControls();
-        } else {
-            initializeAndStartGameEngine();
+        } else  {
+            initializeGameElements();
+            loadGame();
             loadFromSave = false;
         }
+        initializeAndStartGameEngine();
+        setUpGameUI();
+        initializeGameWindow();
 
     }
 
@@ -200,17 +192,12 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         // Add the initialization logic here
         levelUp();
         initializeGameElements();
-        setupGameButtons();
-
-        root = new Pane();
-
+        initializeAndStartGameEngine();
+        root.getChildren().clear();
         setUpGameUI();
         initializeGameWindow();
 
-        if (!loadFromSave) {
-            handleGameControls();
-        } else {
-            initializeAndStartGameEngine();
+        if (loadFromSave) {
             loadFromSave = false;
         }
     }
@@ -221,15 +208,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         gameController.initBoard(blocks);
     }
 
-    private void setupGameButtons() {
-        loadButton = new Button("Load Game");
-        newGameButton = new Button("Start New Game");
-        loadButton.setTranslateX(220);
-        loadButton.setTranslateY(300);
-        newGameButton.setTranslateX(220);
-        newGameButton.setTranslateY(340);
-    }
-
     private void setUpGameUI() {
         scoreLabel = new Label("Score: " + gameController.getScore());
         levelLabel = new Label("Level: " + gameController.getLevel());
@@ -237,11 +215,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         heartLabel = new Label("Heart : " + gameController.getHeart());
         heartLabel.setTranslateX(SCENE_WIDTH - 70);
 
-        if (!loadFromSave) {
-            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel, loadButton, newGameButton);
-        } else {
-            root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
-        }
+        root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
 
         for (Block block : blocks) {
             if (block.rect != null && !block.isDestroyed) {
@@ -251,46 +225,12 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     }
 
     private void initializeGameWindow() {
-        Scene scene = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
-        scene.getStylesheets().add("style.css");
+        // Logic to switch to the game scene
         scene.setOnKeyPressed(this);
-
-        primaryStage.setTitle("Brick Breaker");
-        primaryStage.setScene(scene);
-        primaryStage.show();
     }
 
-    private void handleGameControls() {
-        if (gameController.getLevel() > 1 && gameController.getLevel() < 18) {
-            loadButton.setVisible(false);
-            newGameButton.setVisible(false);
-            initializeAndStartGameEngine();
-        }
-
-        loadButton.setOnAction(event -> {
-            fileController.loadSavedGameState(this, gameController, ball);
-            try {
-                loadFromSave = true;
-                start(primaryStage);
-                // Reinitialize the paddle and add it to the root pane
-                paddle = new Rectangle();
-                gameController.initPaddle(paddle);
-                ball = gameController.initBall();
-                root.getChildren().addAll(paddle, ball);
-            } catch (Exception e) {
-                logger.error("An error occurred in loadSavedGameState() Method: " + e.getMessage(), e);
-            }
-
-            loadButton.setVisible(false);
-            newGameButton.setVisible(false);
-        });
-
-        newGameButton.setOnAction(event -> {
-            initializeAndStartGameEngine();
-
-            loadButton.setVisible(false);
-            newGameButton.setVisible(false);
-        });
+    public void loadGame() {
+        fileController.loadSavedGameState(this, gameController, ball);
     }
 
     private void initializeAndStartGameEngine() {

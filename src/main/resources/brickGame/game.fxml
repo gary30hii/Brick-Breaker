@@ -3,6 +3,6 @@
 <?import javafx.scene.layout.Pane?>
 
 
-<Pane fx:id="backgroundPane" prefHeight="700.0" prefWidth="500.0" styleClass="root" stylesheets="@../style.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="brickGame.controller.MenuController">
+<Pane fx:id="backgroundPane" prefHeight="700.0" prefWidth="500.0" styleClass="game-background-pane" stylesheets="@../style.css" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="brickGame.controller.MenuController">
 
 </Pane>

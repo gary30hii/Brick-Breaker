@@ -19,9 +19,15 @@ public class MenuController {
     }
 
     @FXML
-    private void switchToGameScene() throws IOException {
+    private void startGame() throws IOException {
         // Assuming MainApplication has a method to switch scenes
         mainApp.switchToGameScene();
+    }
+
+    @FXML
+    private void loadGame() throws IOException {
+        mainApp.loadFromSave = true;
+        startGame();
     }
 
 }
