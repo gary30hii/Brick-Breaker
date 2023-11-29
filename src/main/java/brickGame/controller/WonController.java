@@ -11,6 +11,7 @@ import java.io.IOException;
 public class WonController {
     public Pane backgroundPane;
     public Label score;
+    public Button scoreButton;
     private Main mainApp; // Reference to the main application instance
     public Button startGameButton;
     public Button goToMenuButton;
@@ -34,5 +35,11 @@ public class WonController {
     private void goToMenu() throws IOException {
         // Assuming MainApplication has a method to switch scenes
         mainApp.switchToMenu();
+    }
+
+    @FXML
+    private void goToLeaderboard() throws IOException {
+        // Assuming MainApplication has a method to switch scenes
+        mainApp.switchToLeaderboard();
     }
 }

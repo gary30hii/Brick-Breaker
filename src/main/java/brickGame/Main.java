@@ -410,6 +410,16 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         }
     }
 
+    public void switchToLeaderboard() throws IOException {
+        loader = new FXMLLoader(getClass().getResource("leaderboard.fxml"));
+        Parent gameRoot = loader.load();
+        LeaderboardController leaderboardController = loader.getController(); // Get the controller instance
+        leaderboardController.setMainApp(this);
+        scene.setRoot(gameRoot);
+        scene.setOnKeyPressed(this);
+    }
+
+
     public void switchToMenu() throws IOException {
         loader = new FXMLLoader(getClass().getResource("menu.fxml"));
         Parent gameRoot = loader.load();

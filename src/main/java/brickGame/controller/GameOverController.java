@@ -34,4 +34,10 @@ public class GameOverController {
         // Assuming MainApplication has a method to switch scenes
         mainApp.switchToMenu();
     }
+
+    @FXML
+    private void goToLeaderboard() throws IOException {
+        // Assuming MainApplication has a method to switch scenes
+        mainApp.switchToLeaderboard();
+    }
 }

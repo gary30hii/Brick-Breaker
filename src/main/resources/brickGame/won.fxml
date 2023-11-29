@@ -12,9 +12,9 @@
                 <Font name="BM DoHyeon OTF" size="34.0" />
             </font>
         </Label>
-        <Button id="startGameButton" fx:id="startGameButton" layoutX="8.0" layoutY="422.0" maxHeight="44.0" maxWidth="165.0" onAction="#startGame" prefHeight="40.0" prefWidth="165.0" styleClass="won-page-button" stylesheets="@../style.css" text="Start" />
-        <Button id="goToMenuButton" fx:id="goToMenuButton" layoutX="243.0" layoutY="422.0" onAction="#goToMenu" styleClass="won-page-button" stylesheets="@../style.css" text="Menu" />
-        <Button id="scoreButton" fx:id="scoreButton" layoutX="125.0" layoutY="422.0" maxWidth="115.0" prefHeight="40.0" prefWidth="115.0" styleClass="won-page-button" stylesheets="@../style.css" text="Leaderboard" />
+        <Button id="startGameButton" fx:id="startGameButton" layoutX="6.0" layoutY="422.0" maxHeight="44.0" maxWidth="165.0" onAction="#startGame" prefHeight="40.0" prefWidth="165.0" styleClass="won-page-button" stylesheets="@../style.css" text="Start" />
+        <Button id="goToMenuButton" fx:id="goToMenuButton" layoutX="245.0" layoutY="422.0" onAction="#goToMenu" styleClass="won-page-button" stylesheets="@../style.css" text="Menu" />
+        <Button id="scoreButton" fx:id="scoreButton" layoutX="125.0" layoutY="422.0" maxWidth="115.0" onAction="#goToLeaderboard" prefHeight="40.0" prefWidth="115.0" styleClass="won-page-button" stylesheets="@../style.css" text="Leaderboard" />
         <Label id="scoreLabel" layoutX="71.0" layoutY="145.0" prefHeight="23.0" prefWidth="201.0" styleClass="score-label" text="Score:">
             <font>
                 <Font name="Al Tarikh Regular" size="37.0" />
