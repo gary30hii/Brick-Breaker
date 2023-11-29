@@ -9,7 +9,7 @@ public class Paddle extends Rectangle {
     private final int paddleWidth = 130;
     private final int paddleHeight = 30;
     private double xPaddle = (double) Main.SCENE_WIDTH / 2 - (double) paddleWidth / 2; // X position of the break
-    private double yPaddle = 640.0f; // Y position of the break
+    private double yPaddle = 640.0; // Y position of the break
 
     public Paddle(){
         // Initialize the paddle

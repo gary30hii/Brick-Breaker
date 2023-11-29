@@ -2,7 +2,7 @@ package brickGame.model;
 
 import brickGame.Main;
 import brickGame.controller.GameController;
-import brickGame.controller.Score;
+import brickGame.controller.GameUIController;
 import javafx.scene.image.Image;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
@@ -16,12 +16,13 @@ public class Ball extends Circle implements Serializable {
     private double xBall;
     private double yBall;
     private double vX = 1.0;
+    public static final int BALL_RADIUS = 10;
 
 
     public Ball(int xBall, int yBall){
         this.xBall = xBall;
         this.yBall = yBall;
-        setRadius(Main.BALL_RADIUS);
+        setRadius(BALL_RADIUS);
         setFill(new ImagePattern(new Image("ball.png")));
     }
 
@@ -180,7 +181,7 @@ public class Ball extends Circle implements Serializable {
             if (!isGoldStatus) {
                 //TODO game-over
                 gameController.setHeart(gameController.getHeart() - 1);
-                new Score().show((double) Main.SCENE_WIDTH / 2, (double) Main.SCENE_HEIGHT / 2, -1, main);
+                new GameUIController().show((double) Main.SCENE_WIDTH / 2, (double) Main.SCENE_HEIGHT / 2, -1, main);
 
                 if (gameController.getHeart() == 0) {
                     main.showGameOver();
@@ -188,8 +189,8 @@ public class Ball extends Circle implements Serializable {
             }
         }
 
-        if (getYBall() >= Main.Y_PADDLE - Main.BALL_RADIUS) {
-            if (getXBall() >= Main.X_PADDLE && getXBall() <= Main.X_PADDLE + Main.PADDLE_WIDTH) {
+        if (getYBall() >= paddle.getYPaddle() - BALL_RADIUS) {
+            if (getXBall() >= paddle.getXPaddle() && getXBall() <= paddle.getXPaddle() + paddle.getPaddleWidth()) {
                 resetCollisionStates();
                 collideToPaddle = true;
                 goDownBall = false;

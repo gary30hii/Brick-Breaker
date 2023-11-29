@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 public class LoadSave {
     private static final Logger logger = LoggerFactory.getLogger(LoadSave.class);
-
+    private final String savePath = "data/save.mdds";
     // Flags indicating game state
     public boolean isExistHeartBlock;
     public boolean isGoldStatus;
@@ -35,18 +35,24 @@ public class LoadSave {
     public double yBall;
     public double xPaddle;
     public double yPaddle;
-    public double centerPaddleX;
     public long time;
     public long goldTime;
     public double vX;
     public ArrayList<BlockSerializable> blocks = new ArrayList<>();
 
+    //getter
+    public String getSavePath() {
+        return savePath;
+    }
+    public String getSavePathDir() {
+        return "data/";
+    }
 
     // Read saved game data
     public void read() {
 
         try {
-            ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(Main.SAVE_PATH));
+            ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(savePath));
 
             level = inputStream.readInt();
             score = inputStream.readInt();
@@ -57,7 +63,6 @@ public class LoadSave {
             yBall = inputStream.readDouble();
             xPaddle = inputStream.readDouble();
             yPaddle = inputStream.readDouble();
-            centerPaddleX = inputStream.readDouble();
             time = inputStream.readLong();
             goldTime = inputStream.readLong();
             vX = inputStream.readDouble();

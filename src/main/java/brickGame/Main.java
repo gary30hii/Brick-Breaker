@@ -28,12 +28,8 @@ public class Main extends Application implements GameEngine.OnAction {
 
     // Constants
     public static final int SCENE_WIDTH = 500, SCENE_HEIGHT = 700;
-    public static final int PADDLE_WIDTH = 130, PADDLE_HEIGHT = 30, BALL_RADIUS = 10;
-    public static final String SAVE_PATH = "data/save.mdds", SAVE_PATH_DIR = "data/";
 
     // Game variables
-    public static double X_PADDLE = (double) SCENE_WIDTH / 2 - (double) PADDLE_WIDTH / 2;
-    public static double Y_PADDLE = 640.0;
     public long time, goldTime;
     public int destroyedBlockCount;
     public boolean loadFromSave;
@@ -50,7 +46,7 @@ public class Main extends Application implements GameEngine.OnAction {
     private FileController fileController;
     public final ArrayList<Block> blocks = new ArrayList<>();
     public final ArrayList<Bonus> bonuses = new ArrayList<>();
-    private final int finalLevel = 2;
+    private final int finalLevel = 3;
     private int totalScore = 0;
 
     // Initialize the game and UI elements
@@ -81,7 +77,7 @@ public class Main extends Application implements GameEngine.OnAction {
         // Casting the root to Pane and adding the circle
         root = (Pane) gameRoot;
 
-        gameController = new GameController(0, 0, 3);
+        gameController = new GameController(this, 0, 0, 3);
         onInit();
     }
 
@@ -120,7 +116,7 @@ public class Main extends Application implements GameEngine.OnAction {
     // Extract common initialization logic into a separate method
     private void setupNewGameLevel() {
         // Add the initialization logic here
-        levelUp();
+        gameController.levelUp(this);
         if (gameController != null) {
             initializeGameElements();
             initializeAndStartGameEngine();
@@ -168,7 +164,7 @@ public class Main extends Application implements GameEngine.OnAction {
     }
 
     public void loadGame() {
-        fileController.loadSavedGameState(this, gameController, ball);
+        fileController.loadSavedGameState(this, gameController, ball, paddle);
     }
 
     private void initializeAndStartGameEngine() {
@@ -178,18 +174,7 @@ public class Main extends Application implements GameEngine.OnAction {
         engine.start();
     }
 
-    private void levelUp() {
-        gameController.setLevel(gameController.getLevel() + 1);
 
-        if (gameController.getLevel() > 1) {
-            new Score().showMessage("Level Up :)", this);
-        }
-
-        if (gameController.getLevel() == finalLevel) {
-            resetGameToStart();
-            showWin();
-        }
-    }
 
     // Method to restart the game from the beginning
     public void resetGameToStart() {
@@ -216,8 +201,8 @@ public class Main extends Application implements GameEngine.OnAction {
             if (gameController != null) {
                 scoreLabel.setText("Score: " + gameController.getScore());
                 heartLabel.setText("Heart : " + gameController.getHeart());
-                paddle.setX(X_PADDLE);
-                paddle.setY(Y_PADDLE);
+                paddle.setX(paddle.getXPaddle());
+                paddle.setY(paddle.getYPaddle());
                 ball.setCenterX(ball.getXBall());
                 ball.setCenterY(ball.getYBall());
 
@@ -234,11 +219,11 @@ public class Main extends Application implements GameEngine.OnAction {
 
         if (ball.getYBall() >= Block.getPaddingTop() && ball.getYBall() <= (Block.getHeight() * (gameController.getLevel() + 1)) + Block.getPaddingTop()) {
             for (final Block block : blocks) {
-                int hitCode = block.checkHitToBlock(ball.getXBall(), ball.getYBall(), BALL_RADIUS);
+                int hitCode = block.checkHitToBlock(ball.getXBall(), ball.getYBall(), Ball.BALL_RADIUS);
                 if (hitCode != Block.NO_HIT) {
                     gameController.setScore(gameController.getScore() + 1);
 
-                    new Score().show(block.x, block.y, 1, this);
+                    new GameUIController().show(block.x, block.y, 1, this);
 
                     block.rect.setVisible(false);
                     block.isDestroyed = true;
@@ -285,7 +270,7 @@ public class Main extends Application implements GameEngine.OnAction {
     public void onInit() {
         fileController = new FileController();
         if (!loadFromSave) {
-            levelUp();
+            gameController.levelUp(this);
             initializeGameElements();
         } else {
             initializeGameElements();
@@ -311,11 +296,11 @@ public class Main extends Application implements GameEngine.OnAction {
             if (choco.y > SCENE_HEIGHT || choco.taken) {
                 continue;
             }
-            if (choco.y >= Y_PADDLE && choco.y <= Y_PADDLE + PADDLE_HEIGHT && choco.x >= X_PADDLE && choco.x <= X_PADDLE + PADDLE_WIDTH) {
+            if (choco.y >= paddle.getYPaddle() && choco.y <= paddle.getYPaddle() + paddle.getPaddleHeight() && choco.x >= paddle.getXPaddle() && choco.x <= paddle.getXPaddle() + paddle.getPaddleWidth()) {
                 choco.taken = true;
                 choco.choco.setVisible(false);
                 gameController.setScore(gameController.getScore() + 3);
-                new Score().show(choco.x, choco.y, 3, this);
+                new GameUIController().show(choco.x, choco.y, 3, this);
             }
             choco.y += ((time - choco.timeCreated) / 1000.000) + 1.000;
         }

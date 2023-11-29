@@ -5,6 +5,7 @@ import brickGame.Main;
 import brickGame.model.Ball;
 import brickGame.model.Block;
 import brickGame.model.BlockSerializable;
+import brickGame.model.Paddle;
 import javafx.scene.paint.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,13 +17,11 @@ import java.io.ObjectOutputStream;
 
 public class FileController {
     private static final Logger logger = LoggerFactory.getLogger(FileController.class);
-
+    private final LoadSave loadSave = new LoadSave();
     // Load a saved game state
-    public void loadSavedGameState(Main main, GameController gameController, Ball ball) {
+    public void loadSavedGameState(Main main, GameController gameController, Ball ball, Paddle paddle) {
 
-        LoadSave loadSave = new LoadSave();
         loadSave.read();
-
         // Load game state from the saved data
         gameController.setExistHeartBlock(loadSave.isExistHeartBlock);
         ball.setGoldStatus(loadSave.isGoldStatus);
@@ -42,8 +41,8 @@ public class FileController {
         main.destroyedBlockCount = loadSave.destroyedBlockCount;
         ball.setXBall(loadSave.xBall);
         ball.setYBall(loadSave.yBall);
-        Main.X_PADDLE = loadSave.xPaddle;
-        Main.Y_PADDLE = loadSave.yPaddle;
+        paddle.setXPaddle(loadSave.xPaddle);
+        paddle.setYPaddle(loadSave.yPaddle);
         main.time = loadSave.time;
         main.goldTime = loadSave.goldTime;
         ball.setVX(loadSave.vX);
@@ -58,10 +57,10 @@ public class FileController {
     }
 
     // Save the game state to a file
-    public void saveCurrentGameState(Main main, GameController gameController, Ball ball) {
+    public void saveCurrentGameState(Main main, GameController gameController, Ball ball, Paddle paddle) {
         new Thread(() -> {
-            new File(Main.SAVE_PATH_DIR);
-            File file = new File(Main.SAVE_PATH);
+            new File(loadSave.getSavePathDir());
+            File file = new File(loadSave.getSavePath());
             ObjectOutputStream outputStream = null;
             try {
                 outputStream = new ObjectOutputStream(new FileOutputStream(file));
@@ -73,8 +72,8 @@ public class FileController {
 
                 outputStream.writeDouble(ball.getXBall());
                 outputStream.writeDouble(ball.getYBall());
-                outputStream.writeDouble(Main.X_PADDLE);
-                outputStream.writeDouble(Main.Y_PADDLE);
+                outputStream.writeDouble(paddle.getXPaddle());
+                outputStream.writeDouble(paddle.getYPaddle());
                 outputStream.writeLong(main.time);
                 outputStream.writeLong(main.goldTime);
                 outputStream.writeDouble(ball.getVX());
@@ -101,7 +100,7 @@ public class FileController {
                     outputStream.writeBoolean(block.isDestroyed);
                 }
 
-                new Score().showMessage("Game Saved", main);
+                new GameUIController().showMessage("Game Saved", main);
 
             } catch (IOException e) {
                 logger.error("An error occurred in saveGame() Method: " + e.getMessage(), e);

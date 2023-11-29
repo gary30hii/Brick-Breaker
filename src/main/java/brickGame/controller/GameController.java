@@ -23,10 +23,14 @@ public class GameController implements EventHandler<KeyEvent> {
     private int score;
     private int heart;
     private Paddle paddle;
+    private Ball ball;
     private Pane root; // The root pane where game elements are added
     private boolean isExistHeartBlock = false;
+    private final int finalLevel = 3;
 
-    public GameController(int level, int score, int heart) {
+
+    public GameController(Main main, int level, int score, int heart) {
+        this.main =main;
         this.level = level;
         this.score = score;
         this.heart = heart;
@@ -106,10 +110,11 @@ public class GameController implements EventHandler<KeyEvent> {
     public Ball initBall() {
         Random random = new Random();
         int xBall = random.nextInt(Main.SCENE_WIDTH) + 1;
-        int minY = Block.getPaddingTop() + (getLevel() + 1) * Block.getHeight() + Main.BALL_RADIUS;
-        int maxY = Main.SCENE_HEIGHT - Main.BALL_RADIUS;
+        int minY = Block.getPaddingTop() + (getLevel() + 1) * Block.getHeight() + Ball.BALL_RADIUS;
+        int maxY = Main.SCENE_HEIGHT - Ball.BALL_RADIUS;
         int yBall = Math.max(minY, Math.min(random.nextInt(Main.SCENE_HEIGHT - 200) + minY, maxY));
-        return new Ball(xBall, yBall);
+        ball = new Ball(xBall, yBall);
+        return ball;
     }
 
     // Handle key events for game controls
@@ -123,7 +128,7 @@ public class GameController implements EventHandler<KeyEvent> {
                 movePaddle(RIGHT);
                 break;
             case S:
-//                new FileController().saveCurrentGameState(main, this, ball);
+                new FileController().saveCurrentGameState(main, this, ball, paddle);
                 break;
         }
     }
@@ -133,10 +138,10 @@ public class GameController implements EventHandler<KeyEvent> {
         new Thread(() -> {
             int sleepTime = 1;
             for (int i = 0; i < 30; i++) {
-                if (paddle.getXPaddle() == (Main.SCENE_WIDTH - paddle.getPaddleWidth()) && direction == RIGHT) {
+                if (paddle.getXPaddle() >= (Main.SCENE_WIDTH - paddle.getPaddleWidth()) && direction == RIGHT) {
                     return; //paddle stop moving to the right when it touches the right wall
                 }
-                if (paddle.getXPaddle() == 0 && direction == LEFT) {
+                if (paddle.getXPaddle() <= 0 && direction == LEFT) {
                     return; //paddle stop moving to the left when it touch the left wall
                 }
                 if (direction == RIGHT) {
@@ -156,4 +161,16 @@ public class GameController implements EventHandler<KeyEvent> {
         }).start();
     }
 
+    public void levelUp(Main main) {
+        setLevel(getLevel() + 1);
+
+        if (getLevel() > 1 && getLevel() != finalLevel) {
+            new GameUIController().showMessage("Level Up :)", main);
+        }
+
+        if (getLevel() == finalLevel) {
+            main.resetGameToStart();
+            main.showWin();
+        }
+    }
 }
