@@ -2,9 +2,9 @@ package brickGame.controller;
 
 import brickGame.LoadSave;
 import brickGame.Main;
+import brickGame.model.Ball;
 import brickGame.model.Block;
 import brickGame.model.BlockSerializable;
-import brickGame.model.Ball;
 import javafx.scene.paint.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.Random;
 
 public class FileController {
     private static final Logger logger = LoggerFactory.getLogger(FileController.class);
@@ -45,7 +44,6 @@ public class FileController {
         ball.setYBall(loadSave.yBall);
         Main.X_PADDLE = loadSave.xPaddle;
         Main.Y_PADDLE = loadSave.yPaddle;
-        Main.X_PADDLE_CENTER = loadSave.centerPaddleX;
         main.time = loadSave.time;
         main.goldTime = loadSave.goldTime;
         ball.setVX(loadSave.vX);
@@ -54,7 +52,6 @@ public class FileController {
         main.bonuses.clear();
 
         for (BlockSerializable ser : loadSave.blocks) {
-            int r = new Random().nextInt(200); // Example random color selection
             Block newBlock = new Block(ser.row, ser.column, Color.BLUE, ser.type, ser.isDestroyed);
             main.blocks.add(newBlock);
         }
@@ -78,7 +75,6 @@ public class FileController {
                 outputStream.writeDouble(ball.getYBall());
                 outputStream.writeDouble(Main.X_PADDLE);
                 outputStream.writeDouble(Main.Y_PADDLE);
-                outputStream.writeDouble(Main.X_PADDLE_CENTER);
                 outputStream.writeLong(main.time);
                 outputStream.writeLong(main.goldTime);
                 outputStream.writeDouble(ball.getVX());

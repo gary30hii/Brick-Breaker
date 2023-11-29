@@ -5,18 +5,16 @@ import brickGame.engine.GameEngine;
 import brickGame.model.Ball;
 import brickGame.model.Block;
 import brickGame.model.Bonus;
+import brickGame.model.Paddle;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.ImagePattern;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,25 +22,24 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class Main extends Application implements EventHandler<KeyEvent>, GameEngine.OnAction {
+public class Main extends Application implements GameEngine.OnAction {
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     // Constants
-    public static final int LEFT = 1, RIGHT = 2, SCENE_WIDTH = 500, SCENE_HEIGHT = 700;
+    public static final int SCENE_WIDTH = 500, SCENE_HEIGHT = 700;
     public static final int PADDLE_WIDTH = 130, PADDLE_HEIGHT = 30, BALL_RADIUS = 10;
     public static final String SAVE_PATH = "data/save.mdds", SAVE_PATH_DIR = "data/";
 
     // Game variables
     public static double X_PADDLE = (double) SCENE_WIDTH / 2 - (double) PADDLE_WIDTH / 2;
     public static double Y_PADDLE = 640.0;
-    public static double X_PADDLE_CENTER;
     public long time, goldTime;
     public int destroyedBlockCount;
     public boolean loadFromSave;
 
     private Ball ball;
-    private Rectangle paddle;
+    private Paddle paddle;
     private Scene scene;
     public Pane root;
     private Label scoreLabel, heartLabel, levelLabel;
@@ -79,30 +76,13 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         loader = new FXMLLoader(getClass().getResource("game.fxml"));
         Parent gameRoot = loader.load();
         scene.setRoot(gameRoot);
-        scene.setOnKeyPressed(this);
+        scene.setOnKeyPressed(gameController);
 
         // Casting the root to Pane and adding the circle
         root = (Pane) gameRoot;
 
-        initializeGameStage();
-    }
-
-    private void initializeGameStage() {
-        paddle = new Rectangle();
-        fileController = new FileController();
-        gameController = new GameController(0, 0, 3, root);
-        if (!loadFromSave) {
-            levelUp();
-            initializeGameElements();
-        } else {
-            initializeGameElements();
-            loadGame();
-            loadFromSave = false;
-        }
-        initializeAndStartGameEngine();
-        setUpGameUI();
-        initializeGameWindow();
-
+        gameController = new GameController(0, 0, 3);
+        onInit();
     }
 
     // Main method to launch the application
@@ -110,50 +90,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         launch(args);
     }
 
-    // Handle key events for game controls
-    @Override
-    public void handle(KeyEvent event) {
-        switch (event.getCode()) {
-            case LEFT:
-                movePaddle(LEFT);
-                break;
-            case RIGHT:
-                movePaddle(RIGHT);
-                break;
-            case S:
-                fileController.saveCurrentGameState(this, gameController, ball);
-                break;
-        }
-    }
-
-    // Move the paddle left or right
-    private void movePaddle(int direction) {
-        new Thread(() -> {
-            int sleepTime = 1;
-            for (int i = 0; i < 30; i++) {
-                if (X_PADDLE == (SCENE_WIDTH - PADDLE_WIDTH) && direction == RIGHT) {
-                    return; //paddle stop moving to the right when it touches the right wall
-                }
-                if (X_PADDLE == 0 && direction == LEFT) {
-                    return; //paddle stop moving to the left when it touch the left wall
-                }
-                if (direction == RIGHT) {
-                    X_PADDLE++;
-                } else {
-                    X_PADDLE--;
-                }
-                X_PADDLE_CENTER = X_PADDLE + (double) PADDLE_WIDTH / 2;
-                try {
-                    Thread.sleep(sleepTime);
-                } catch (InterruptedException e) {
-                    logger.error("An error occurred in move() Method: " + e.getMessage(), e);
-                }
-                if (i >= 20) {
-                    sleepTime = i;
-                }
-            }
-        }).start();
-    }
 
     // Method to prepare for the next game level
     private void prepareForNextLevel() {
@@ -196,7 +132,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     private void initializeGameElements() {
         ball = gameController.initBall();
-        gameController.initPaddle(paddle);
+        paddle = gameController.initPaddle();
         gameController.initBoard(blocks);
     }
 
@@ -214,7 +150,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         scoreLabel.setTranslateY(5);
         levelLabel.setTranslateX(45);
         levelLabel.setTranslateY(25);
-        heartLabel.setTranslateX(SCENE_WIDTH - 120);
+        heartLabel.setTranslateX(380);
         heartLabel.setTranslateY(5);
 
         root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
@@ -228,7 +164,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     private void initializeGameWindow() {
         // Logic to switch to the game scene
-        scene.setOnKeyPressed(this);
+        scene.setOnKeyPressed(gameController);
     }
 
     public void loadGame() {
@@ -347,12 +283,23 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
     @Override
     public void onInit() {
-
+        fileController = new FileController();
+        if (!loadFromSave) {
+            levelUp();
+            initializeGameElements();
+        } else {
+            initializeGameElements();
+            loadGame();
+            loadFromSave = false;
+        }
+        initializeAndStartGameEngine();
+        setUpGameUI();
+        initializeGameWindow();
     }
 
     @Override
     public void performPhysicsCalculations() {
-        ball.updateBallMovement(this, gameController, engine);
+        ball.updateBallMovement(this, gameController, paddle);
 
         if (time - goldTime > 5000) {
             ball.setFill(new ImagePattern(new Image("ball.png")));
@@ -387,7 +334,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             WonController wonController = loader.getController(); // Get the controller instance
             wonController.setMainApp(this, totalScore);
             scene.setRoot(gameRoot);
-            scene.setOnKeyPressed(this);
+            scene.setOnKeyPressed(gameController);
         } catch (IOException e) {
             // Log the exception details or handle it appropriately
             logger.error("An error occurred in showWin() method: " + e.getMessage(), e);
@@ -403,7 +350,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             GameOverController gameOverController = loader.getController(); // Get the controller instance
             gameOverController.setMainApp(this, totalScore);
             scene.setRoot(gameRoot);
-            scene.setOnKeyPressed(this);
+            scene.setOnKeyPressed(gameController);
         } catch (IOException e) {
             // Log the exception details or handle it appropriately
             logger.error("An error occurred in showGameOver() method: " + e.getMessage(), e);
@@ -416,7 +363,6 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         LeaderboardController leaderboardController = loader.getController(); // Get the controller instance
         leaderboardController.setMainApp(this);
         scene.setRoot(gameRoot);
-        scene.setOnKeyPressed(this);
     }
 
 
@@ -426,6 +372,5 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         MenuController menuController = loader.getController(); // Get the controller instance
         menuController.setMainApp(this);
         scene.setRoot(gameRoot);
-        scene.setOnKeyPressed(this);
     }
 }

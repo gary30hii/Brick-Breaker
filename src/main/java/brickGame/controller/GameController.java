@@ -3,32 +3,33 @@ package brickGame.controller;
 import brickGame.Main;
 import brickGame.model.Ball;
 import brickGame.model.Block;
-import javafx.scene.image.Image;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.ImagePattern;
-import javafx.scene.shape.Rectangle;
+import brickGame.model.Paddle;
+import javafx.event.EventHandler;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Random;
 
-public class GameController {
+public class GameController implements EventHandler<KeyEvent> {
+    private static final Logger logger = LoggerFactory.getLogger(GameController.class);
 
+    private static final int LEFT = 1, RIGHT = 2;
+    private Main main;
     private int level;
     private int score;
     private int heart;
+    private Paddle paddle;
     private Pane root; // The root pane where game elements are added
-    private final int paddleWidth = 130;
-    private final int paddleHeight = 30;
-    private double xPaddle; // X position of the break
-    private double yPaddle = 640.0f; // Y position of the break
     private boolean isExistHeartBlock = false;
 
-    public GameController(int level, int score, int heart, Pane root) {
+    public GameController(int level, int score, int heart) {
         this.level = level;
         this.score = score;
         this.heart = heart;
-        this.root = root;
-        this.xPaddle = (double) Main.SCENE_WIDTH / 2 - (double) paddleWidth / 2; // Assuming root has a predefined width
     }
 
     public int getLevel() {
@@ -96,17 +97,9 @@ public class GameController {
         }
     }
 
-    public void initPaddle(Rectangle paddle) {
-        // Initialize the paddle
-        paddle.setWidth(paddleWidth);
-        paddle.setHeight(paddleHeight);
-        paddle.setX(xPaddle);
-        paddle.setY(yPaddle);
-
-        // Apply a texture or color to the paddle
-        ImagePattern pattern = new ImagePattern(new Image("block.jpg"));
-        paddle.setFill(pattern);
-
+    public Paddle initPaddle() {
+        this.paddle = new Paddle();
+        return paddle;
     }
 
     // Initialize the game ball
@@ -118,4 +111,49 @@ public class GameController {
         int yBall = Math.max(minY, Math.min(random.nextInt(Main.SCENE_HEIGHT - 200) + minY, maxY));
         return new Ball(xBall, yBall);
     }
+
+    // Handle key events for game controls
+    @Override
+    public void handle(KeyEvent event) {
+        switch (event.getCode()) {
+            case LEFT:
+                movePaddle(LEFT);
+                break;
+            case RIGHT:
+                movePaddle(RIGHT);
+                break;
+            case S:
+//                new FileController().saveCurrentGameState(main, this, ball);
+                break;
+        }
+    }
+
+    // Move the paddle left or right
+    private void movePaddle(int direction) {
+        new Thread(() -> {
+            int sleepTime = 1;
+            for (int i = 0; i < 30; i++) {
+                if (paddle.getXPaddle() == (Main.SCENE_WIDTH - paddle.getPaddleWidth()) && direction == RIGHT) {
+                    return; //paddle stop moving to the right when it touches the right wall
+                }
+                if (paddle.getXPaddle() == 0 && direction == LEFT) {
+                    return; //paddle stop moving to the left when it touch the left wall
+                }
+                if (direction == RIGHT) {
+                    paddle.setXPaddle(paddle.getXPaddle() + 2);
+                } else {
+                    paddle.setXPaddle(paddle.getXPaddle() - 2);
+                }
+                try {
+                    Thread.sleep(sleepTime);
+                } catch (InterruptedException e) {
+                    logger.error("An error occurred in move() Method: " + e.getMessage(), e);
+                }
+                if (i >= 20) {
+                    sleepTime = i;
+                }
+            }
+        }).start();
+    }
+
 }

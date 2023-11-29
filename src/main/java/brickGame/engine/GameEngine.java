@@ -55,7 +55,6 @@ public class GameEngine {
             return; // The game is already running
         }
         isStopped = false;
-        onAction.onInit();
         gameLoop();
     }
 

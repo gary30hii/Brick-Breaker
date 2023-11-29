@@ -3,7 +3,6 @@ package brickGame.model;
 import brickGame.Main;
 import brickGame.controller.GameController;
 import brickGame.controller.Score;
-import brickGame.engine.GameEngine;
 import javafx.scene.image.Image;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
@@ -154,7 +153,7 @@ public class Ball extends Circle implements Serializable {
     }
 
     // Handle physics for the game ball
-    public void updateBallMovement(Main main, GameController gameController, GameEngine engine) {
+    public void updateBallMovement(Main main, GameController gameController, Paddle paddle) {
 
         double vY = 3.0;
         if (goDownBall) {
@@ -195,7 +194,7 @@ public class Ball extends Circle implements Serializable {
                 collideToPaddle = true;
                 goDownBall = false;
 
-                double relation = (getXBall() - Main.X_PADDLE_CENTER) / ((double) Main.PADDLE_WIDTH / 2);
+                double relation = (getXBall() - (paddle.getXPaddle() + (double) paddle.getPaddleWidth() / 2)) / ((double) paddle.getPaddleWidth() / 2);
 
                 if (Math.abs(relation) <= 0.3) {
                     vX = Math.abs(relation);
@@ -205,7 +204,7 @@ public class Ball extends Circle implements Serializable {
                     vX = (Math.abs(relation) * 2) + (gameController.getLevel() / 3.500);
                 }
 
-                collideToPaddleAndMoveToRight = getXBall() - Main.X_PADDLE_CENTER > 0;
+                collideToPaddleAndMoveToRight = getXBall() - (paddle.getXPaddle() + (double) paddle.getPaddleWidth() / 2) > 0;
             }
         }
 
