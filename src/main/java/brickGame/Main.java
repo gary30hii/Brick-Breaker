@@ -1,10 +1,6 @@
 package brickGame;
 
-import brickGame.controller.FileController;
-import brickGame.controller.GameController;
-import brickGame.controller.MenuController;
-import brickGame.controller.WonController;
-import brickGame.controller.Score;
+import brickGame.controller.*;
 import brickGame.engine.GameEngine;
 import brickGame.model.Ball;
 import brickGame.model.Block;
@@ -57,7 +53,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private FileController fileController;
     public final ArrayList<Block> blocks = new ArrayList<>();
     public final ArrayList<Bonus> bonuses = new ArrayList<>();
-    private final int finalLevel = 3;
+    private final int finalLevel = 2;
     private int totalScore = 0;
 
     // Initialize the game and UI elements
@@ -94,7 +90,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private void initializeGameStage() {
         paddle = new Rectangle();
         fileController = new FileController();
-        gameController = new GameController(0, 0, 100, root);
+        gameController = new GameController(0, 0, 3, root);
         if (!loadFromSave) {
             levelUp();
             initializeGameElements();
@@ -207,9 +203,19 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     private void setUpGameUI() {
         scoreLabel = new Label("Score: " + gameController.getScore());
         levelLabel = new Label("Level: " + gameController.getLevel());
-        levelLabel.setTranslateY(20);
         heartLabel = new Label("Heart : " + gameController.getHeart());
-        heartLabel.setTranslateX(SCENE_WIDTH - 70);
+
+        // Add a style class to each label
+        scoreLabel.getStyleClass().add("label-style");
+        levelLabel.getStyleClass().add("label-style");
+        heartLabel.getStyleClass().add("label-style");
+
+        scoreLabel.setTranslateX(45);
+        scoreLabel.setTranslateY(5);
+        levelLabel.setTranslateX(45);
+        levelLabel.setTranslateY(25);
+        heartLabel.setTranslateX(SCENE_WIDTH - 120);
+        heartLabel.setTranslateY(5);
 
         root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
 
@@ -245,7 +251,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
 
         if (gameController.getLevel() == finalLevel) {
             resetGameToStart();
-            showWin(totalScore);
+            showWin();
         }
     }
 
@@ -271,20 +277,21 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
     public void updateGameFrame() {
         Platform.runLater(() -> {
 
-            scoreLabel.setText("Score: " + gameController.getScore());
-            heartLabel.setText("Heart : " + gameController.getHeart());
+            if (gameController != null) {
+                scoreLabel.setText("Score: " + gameController.getScore());
+                heartLabel.setText("Heart : " + gameController.getHeart());
+                paddle.setX(X_PADDLE);
+                paddle.setY(Y_PADDLE);
+                ball.setCenterX(ball.getXBall());
+                ball.setCenterY(ball.getYBall());
 
-            paddle.setX(X_PADDLE);
-            paddle.setY(Y_PADDLE);
-            ball.setCenterX(ball.getXBall());
-            ball.setCenterY(ball.getYBall());
+                for (Bonus choco : bonuses) {
+                    choco.choco.setY(choco.y);
+                }
 
-            for (Bonus choco : bonuses) {
-                choco.choco.setY(choco.y);
-            }
-
-            if (destroyedBlockCount == blocks.size() && gameController.getLevel() < finalLevel) {
-                prepareForNextLevel();
+                if (destroyedBlockCount == blocks.size() && gameController.getLevel() < finalLevel) {
+                    prepareForNextLevel();
+                }
             }
         });
 
@@ -373,7 +380,7 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
         this.time = time;
     }
 
-    public void showWin(int totalScore) {
+    public void showWin() {
         try {
             loader = new FXMLLoader(getClass().getResource("won.fxml"));
             Parent gameRoot = loader.load();
@@ -383,10 +390,25 @@ public class Main extends Application implements EventHandler<KeyEvent>, GameEng
             scene.setOnKeyPressed(this);
         } catch (IOException e) {
             // Log the exception details or handle it appropriately
-            logger.error("An error occurred in showGameOver() method: " + e.getMessage(), e);
+            logger.error("An error occurred in showWin() method: " + e.getMessage(), e);
         }
     }
 
+    public void showGameOver() {
+        try {
+            engine.stop();
+            resetGameToStart();
+            loader = new FXMLLoader(getClass().getResource("gameover.fxml"));
+            Parent gameRoot = loader.load();
+            GameOverController gameOverController = loader.getController(); // Get the controller instance
+            gameOverController.setMainApp(this, totalScore);
+            scene.setRoot(gameRoot);
+            scene.setOnKeyPressed(this);
+        } catch (IOException e) {
+            // Log the exception details or handle it appropriately
+            logger.error("An error occurred in showGameOver() method: " + e.getMessage(), e);
+        }
+    }
 
     public void switchToMenu() throws IOException {
         loader = new FXMLLoader(getClass().getResource("menu.fxml"));

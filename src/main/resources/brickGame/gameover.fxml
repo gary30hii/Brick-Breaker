@@ -5,16 +5,15 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="backgroundPane" prefHeight="700.0" prefWidth="500.0" styleClass="won-background-pane" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="brickGame.controller.WonController">
+<Pane fx:id="backgroundPane" prefHeight="700.0" prefWidth="500.0" styleClass="game-over-background-pane" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="brickGame.controller.GameOverController">
     <Pane layoutX="71.0" layoutY="105.0" prefHeight="490.0" prefWidth="359.0" styleClass="game-result-pane">
-        <Label alignment="CENTER" prefHeight="47.0" prefWidth="359.0" styleClass="game-result-label" text="YOU WIN!" textAlignment="CENTER" textFill="#ffc72c">
+        <Label alignment="CENTER" prefHeight="47.0" prefWidth="359.0" styleClass="game-result-label" text="GAME OVER!" textAlignment="CENTER" textFill="#ffc72c">
             <font>
                 <Font name="BM DoHyeon OTF" size="34.0" />
             </font>
         </Label>
-        <Button id="startGameButton" fx:id="startGameButton" layoutX="8.0" layoutY="422.0" maxHeight="44.0" maxWidth="165.0" onAction="#startGame" prefHeight="40.0" prefWidth="165.0" styleClass="won-page-button" stylesheets="@../style.css" text="Start" />
-        <Button id="goToMenuButton" fx:id="goToMenuButton" layoutX="243.0" layoutY="422.0" onAction="#goToMenu" styleClass="won-page-button" stylesheets="@../style.css" text="Menu" />
-        <Button id="scoreButton" fx:id="scoreButton" layoutX="125.0" layoutY="422.0" maxWidth="115.0" prefHeight="40.0" prefWidth="115.0" styleClass="won-page-button" stylesheets="@../style.css" text="Leaderboard" />
+        <Button id="startGameButton" fx:id="startGameButton" layoutX="35.0" layoutY="422.0" maxHeight="44.0" maxWidth="165.0" onAction="#startGame" prefHeight="40.0" prefWidth="165.0" styleClass="game-over-page-button" stylesheets="@../style.css" text="Start" />
+        <Button id="goToMenuButton" fx:id="goToMenuButton" layoutX="197.0" layoutY="422.0" onAction="#goToMenu" styleClass="game-over-page-button" stylesheets="@../style.css" text="Menu" />
         <Label id="scoreLabel" layoutX="71.0" layoutY="145.0" prefHeight="23.0" prefWidth="201.0" styleClass="score-label" text="Score:">
             <font>
                 <Font name="Al Tarikh Regular" size="37.0" />

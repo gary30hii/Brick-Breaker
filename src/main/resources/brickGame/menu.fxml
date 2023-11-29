@@ -7,6 +7,6 @@
     <children>
         <Button id="startGameButton" fx:id="startGameButton" layoutX="190.0" layoutY="340.0" maxHeight="44.0" maxWidth="108.0" onAction="#startGame" prefHeight="44.0" prefWidth="108.0" styleClass="main-page-button" stylesheets="@../style.css" text="Start" />
         <Button id="loadGameButton" fx:id="loadGameButton" layoutX="190.0" layoutY="390.0" onAction="#loadGame" styleClass="main-page-button" stylesheets="@../style.css" text="Load Game " />
-        <Button id="scoreButton" fx:id="scoreButton" layoutX="190.0" layoutY="440.0" styleClass="main-page-button" stylesheets="@../style.css" text="High Score" />
+        <Button id="scoreButton" fx:id="scoreButton" layoutX="190.0" layoutY="440.0" styleClass="main-page-button" stylesheets="@../style.css" text="Leaderboard" />
     </children>
 </Pane>
