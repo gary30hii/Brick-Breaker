@@ -170,13 +170,13 @@ public class Main extends Application implements GameEngine.OnAction {
             // Reset game variables for a fresh start
             engine.stop();
             totalScore = gameController.getScore();
+            gameController.blocks.clear();
+            gameController.bonuses.clear();
             ball = null;
             gameController = null;
             destroyedBlockCount = 0;
             time = 0;
             goldTime = 0;
-            gameController.blocks.clear();
-            gameController.bonuses.clear();
         } catch (Exception e) {
             logger.error("An error occurred in resetGameToStart() Method: " + e.getMessage(), e);
         }

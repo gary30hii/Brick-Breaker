@@ -17,7 +17,8 @@ import java.util.Random;
 public class GameController implements EventHandler<KeyEvent> {
     private static final Logger logger = LoggerFactory.getLogger(GameController.class);
 
-    private static final int LEFT = 1, RIGHT = 2;
+    public static final int LEFT = 1;
+    public static final int RIGHT = 2;
     private Main main;
     private int level;
     private int score;
@@ -123,10 +124,10 @@ public class GameController implements EventHandler<KeyEvent> {
     public void handle(KeyEvent event) {
         switch (event.getCode()) {
             case LEFT:
-                movePaddle(LEFT);
+                paddle.movePaddle(LEFT);
                 break;
             case RIGHT:
-                movePaddle(RIGHT);
+                paddle.movePaddle(RIGHT);
                 break;
             case S:
                 new FileController().saveCurrentGameState(main, this, ball, paddle);
@@ -134,33 +135,7 @@ public class GameController implements EventHandler<KeyEvent> {
         }
     }
 
-    // Move the paddle left or right
-    private void movePaddle(int direction) {
-        new Thread(() -> {
-            int sleepTime = 1;
-            for (int i = 0; i < 30; i++) {
-                if (paddle.getXPaddle() >= (Main.SCENE_WIDTH - paddle.getPaddleWidth()) && direction == RIGHT) {
-                    return; //paddle stop moving to the right when it touches the right wall
-                }
-                if (paddle.getXPaddle() <= 0 && direction == LEFT) {
-                    return; //paddle stop moving to the left when it touch the left wall
-                }
-                if (direction == RIGHT) {
-                    paddle.setXPaddle(paddle.getXPaddle() + 1);
-                } else {
-                    paddle.setXPaddle(paddle.getXPaddle() - 1);
-                }
-                try {
-                    Thread.sleep(sleepTime);
-                } catch (InterruptedException e) {
-                    logger.error("An error occurred in move() Method: " + e.getMessage(), e);
-                }
-                if (i >= 20) {
-                    sleepTime = i;
-                }
-            }
-        }).start();
-    }
+
 
     public void levelUp(Main main) {
         setLevel(getLevel() + 1);
