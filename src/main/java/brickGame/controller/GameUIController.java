@@ -14,6 +14,7 @@ public class GameUIController {
     public void show(double x, double y, int score, Main main) {
         String sign = (score >= 0) ? "+" : "";
         Label label = new Label(sign + score);
+        label.getStyleClass().add("game-message");
         label.setTranslateX(x);
         label.setTranslateY(y);
 
@@ -25,6 +26,7 @@ public class GameUIController {
     // Display a message with animation at a fixed position.
     public void showMessage(String message, Main main) {
         final Label label = new Label(message);
+        label.getStyleClass().add("game-message");
         label.setTranslateX(220);
         label.setTranslateY(340);
 

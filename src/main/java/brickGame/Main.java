@@ -1,10 +1,7 @@
 package brickGame;
 
 import brickGame.controller.*;
-import brickGame.engine.GameEngine;
-import brickGame.model.Ball;
 import brickGame.model.Block;
-import brickGame.model.Paddle;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -24,29 +21,21 @@ public class Main extends Application {
     // Constants
     public static final int SCENE_WIDTH = 500, SCENE_HEIGHT = 700;
 
-    // Game variables
-    public long time, goldTime;
-    public int destroyedBlockCount;
-    public boolean loadFromSave;
-
-    private Ball ball;
-    private Paddle paddle;
+    //UI variable
+    private Label scoreLabel;
+    private Label heartLabel;
     public Scene scene;
     public Pane root;
-    private Label scoreLabel, heartLabel, levelLabel;
-    private Stage primaryStage;
-    FXMLLoader loader;
-    private GameEngine engine;
+    private FXMLLoader loader;
+
+    // Game variables
     private GameController gameController;
-    private FileController fileController;
+    public boolean loadFromSave;
+    public int finalScore = 0;
 
-    private final int finalLevel = 10;
-    private int totalScore = 0;
-
-    // Initialize the game and UI elements
+    // Initialize UI elements
     @Override
     public void start(Stage primaryStage) throws IOException {
-        this.primaryStage = primaryStage;
         loader = new FXMLLoader(getClass().getResource("menu.fxml"));
         root = loader.load();
 
@@ -85,50 +74,9 @@ public class Main extends Application {
         heartLabel.setText("Heart : " + heart);
     }
 
-    // Method to prepare for the next game level
-    public void prepareForNextLevel() {
-        try {
-            // Reset variables for the next level
-            ball.setVX(1.000);
-            engine.stop();
-            ball.resetCollisionStates();
-            ball.setGoDownBall(true);
-            gameController.setExistHeartBlock(false);
-            time = 0;
-            gameController.blocks.clear();
-            gameController.bonuses.clear();
-            destroyedBlockCount = 0;
-
-            // Call the initialization logic directly
-            setupNewGameLevel();
-
-        } catch (Exception e) {
-            logger.error("An error occurred in prepareForNextLevel() Method: " + e.getMessage(), e);
-        }
-    }
-
-    // Extract common initialization logic into a separate method
-    private void setupNewGameLevel() {
-        // Add the initialization logic here
-        gameController.levelUp(this);
-        if (gameController != null) {
-            initializeGameElements();
-            initializeAndStartGameEngine();
-            root.getChildren().clear();
-            setUpGameUI();
-            scene.setOnKeyPressed(gameController);
-        }
-    }
-
-    public void initializeGameElements() {
-        ball = gameController.initBall();
-        paddle = gameController.initPaddle();
-        gameController.initBoard(gameController.blocks);
-    }
-
     public void setUpGameUI() {
         scoreLabel = new Label("Score: " + gameController.getScore());
-        levelLabel = new Label("Level: " + gameController.getLevel());
+        Label levelLabel = new Label("Level: " + gameController.getLevel());
         heartLabel = new Label("Heart : " + gameController.getHeart());
 
         // Add a style class to each label
@@ -143,48 +91,23 @@ public class Main extends Application {
         heartLabel.setTranslateX(380);
         heartLabel.setTranslateY(5);
 
-        root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
+        root.getChildren().addAll(gameController.getPaddle(), gameController.getBall(), scoreLabel, heartLabel, levelLabel);
 
-        for (Block block : gameController.blocks) {
+        for (Block block : gameController.getBlocks()) {
             if (block.rect != null && !block.isDestroyed) {
                 root.getChildren().add(block.rect);
             }
         }
     }
 
-    public void initializeAndStartGameEngine() {
-        engine = new GameEngine(120);
-        engine.setOnAction(gameController);
-        engine.start();
-    }
-
-    // Method to restart the game from the beginning
-    public void resetGameToStart() {
-        try {
-            // Reset game variables for a fresh start
-            engine.stop();
-            totalScore = gameController.getScore();
-            gameController.blocks.clear();
-            gameController.bonuses.clear();
-            ball = null;
-            gameController = null;
-            destroyedBlockCount = 0;
-            time = 0;
-            goldTime = 0;
-        } catch (Exception e) {
-            logger.error("An error occurred in resetGameToStart() Method: " + e.getMessage(), e);
-        }
-    }
-
-
     public void showWin() {
         try {
+            gameController = null;
             loader = new FXMLLoader(getClass().getResource("won.fxml"));
             Parent gameRoot = loader.load();
             WonController wonController = loader.getController(); // Get the controller instance
-            wonController.setMainApp(this, totalScore);
+            wonController.setMainApp(this, finalScore);
             scene.setRoot(gameRoot);
-            scene.setOnKeyPressed(gameController);
         } catch (IOException e) {
             // Log the exception details or handle it appropriately
             logger.error("An error occurred in showWin() method: " + e.getMessage(), e);
@@ -193,13 +116,13 @@ public class Main extends Application {
 
     public void showGameOver() {
         try {
-            resetGameToStart();
+            gameController.resetGameToStart();
+            gameController = null;
             loader = new FXMLLoader(getClass().getResource("gameover.fxml"));
             Parent gameRoot = loader.load();
             GameOverController gameOverController = loader.getController(); // Get the controller instance
-            gameOverController.setMainApp(this, totalScore);
+            gameOverController.setMainApp(this, finalScore);
             scene.setRoot(gameRoot);
-            scene.setOnKeyPressed(gameController);
         } catch (IOException e) {
             // Log the exception details or handle it appropriately
             logger.error("An error occurred in showGameOver() method: " + e.getMessage(), e);

@@ -23,17 +23,22 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
 
     public static final int LEFT = 1;
     public static final int RIGHT = 2;
-    private Main main;
+    private final Main main;
     private int level;
     private int score;
     private int heart;
+    private GameEngine engine;
     private Paddle paddle;
     private Ball ball;
-    public final ArrayList<Block> blocks = new ArrayList<>();
-    public final ArrayList<Bonus> bonuses = new ArrayList<>();
-    private boolean isExistHeartBlock = false;
-    private final int finalLevel = 18;
+    private final ArrayList<Block> blocks = new ArrayList<>();
+    private final ArrayList<Bonus> bonuses = new ArrayList<>();
 
+    private boolean isExistHeartBlock = false;
+    private int destroyedBlockCount;
+
+    private final int finalLevel = 18;
+    private long time;
+    private long goldTime;
 
     public GameController(Main main, int level, int score, int heart) {
         this.main =main;
@@ -54,8 +59,36 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
         return heart;
     }
 
+    public Paddle getPaddle() {
+        return paddle;
+    }
+
+    public Ball getBall() {
+        return ball;
+    }
+
+    public ArrayList<Block> getBlocks() {
+        return blocks;
+    }
+
+    public ArrayList<Bonus> getBonuses() {
+        return bonuses;
+    }
+
     public boolean isExistHeartBlock() {
         return isExistHeartBlock;
+    }
+
+    public int getDestroyedBlockCount() {
+        return destroyedBlockCount;
+    }
+
+    public long getTime() {
+        return time;
+    }
+
+    public long getGoldTime() {
+        return goldTime;
     }
 
     public void setLevel(int level) {
@@ -74,8 +107,20 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
         isExistHeartBlock = existHeartBlock;
     }
 
+    public void setDestroyedBlockCount(int destroyedBlockCount) {
+        this.destroyedBlockCount = destroyedBlockCount;
+    }
+
+    public void setTime(long time) {
+        this.time = time;
+    }
+
+    public void setGoldTime(long goldTime) {
+        this.goldTime = goldTime;
+    }
+
     // Initialize the game board
-    public void initBoard(ArrayList<Block> blocks) {
+    private void initBoard(ArrayList<Block> blocks) {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < getLevel() + 1; j++) {
                 int r = new Random().nextInt(500);
@@ -107,13 +152,13 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
         }
     }
 
-    public Paddle initPaddle() {
+    private Paddle initPaddle() {
         this.paddle = new Paddle();
         return paddle;
     }
 
     // Initialize the game ball
-    public Ball initBall() {
+    private Ball initBall() {
         Random random = new Random();
         int xBall = random.nextInt(Main.SCENE_WIDTH) + 1;
         int minY = Block.getPaddingTop() + (getLevel() + 1) * Block.getHeight() + Ball.BALL_RADIUS;
@@ -139,7 +184,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
         }
     }
 
-    public void levelUp(Main main) {
+    private void levelUp(Main main) {
         setLevel(getLevel() + 1);
 
         if (getLevel() > 1 && getLevel() != finalLevel) {
@@ -147,7 +192,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
         }
 
         if (getLevel() == finalLevel) {
-            main.resetGameToStart();
+            resetGameToStart();
             main.showWin();
         }
     }
@@ -167,8 +212,8 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
                 choco.choco.setY(choco.y);
             }
 
-            if (main.destroyedBlockCount == blocks.size() && getLevel() < finalLevel) {
-                main.prepareForNextLevel();
+            if (destroyedBlockCount == blocks.size() && getLevel() < finalLevel) {
+                prepareForNextLevel();
             }
         });
 
@@ -182,20 +227,19 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
 
                     block.rect.setVisible(false);
                     block.isDestroyed = true;
-                    main.destroyedBlockCount++;
+                    destroyedBlockCount++;
                     ball.resetCollisionStates();
 
                     if (block.type == Block.BLOCK_CHOCO) {
                         final Bonus choco = new Bonus(block.row, block.column);
-                        choco.timeCreated = main.time;
+                        choco.timeCreated = time;
                         Platform.runLater(() -> main.root.getChildren().add(choco.choco));
                         bonuses.add(choco);
                     }
 
                     if (block.type == Block.BLOCK_STAR) {
-                        main.goldTime = main.time;
+                        goldTime = time;
                         ball.setFill(new ImagePattern(new Image("goldball.png")));
-                        main.root.getStyleClass().add("goldRoot");
                         ball.setGoldStatus(true);
                     }
 
@@ -223,13 +267,13 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     public void onInit() {
         if (!main.loadFromSave) {
             levelUp(main);
-            main.initializeGameElements();
+            initializeGameElements();
         } else {
-            main.initializeGameElements();
-            new FileController().loadSavedGameState(main, this, ball, paddle);
+            initializeGameElements();
+            new FileController().loadSavedGameState(this, ball, paddle);
             main.loadFromSave = false;
         }
-        main.initializeAndStartGameEngine();
+        initializeAndStartGameEngine();
         main.setUpGameUI();
         main.scene.setOnKeyPressed(this);
     }
@@ -238,7 +282,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     public void performPhysicsCalculations() {
         ball.updateBallMovement(main, this, paddle);
 
-        if (main.time - main.goldTime > 5000) {
+        if (time - goldTime > 5000) {
             ball.setFill(new ImagePattern(new Image("ball.png")));
             ball.setGoldStatus(false);
         }
@@ -253,14 +297,79 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
                 setScore(getScore() + 3);
                 new GameUIController().show(choco.x, choco.y, 3, main);
             }
-            choco.y += ((main.time - choco.timeCreated) / 1000.000) + 1.000;
+            choco.y += ((time - choco.timeCreated) / 1000.000) + 1.000;
         }
 
     }
 
     @Override
     public void onTime(long time) {
-        main.time = time;
+        this.time = time;
+    }
+
+    // Method to prepare for the next game level
+    private void prepareForNextLevel() {
+        try {
+            // Reset variables for the next level
+            ball.setVX(1.000);
+            engine.stop();
+            ball.resetCollisionStates();
+            ball.setGoDownBall(true);
+            setExistHeartBlock(false);
+            time = 0;
+            blocks.clear();
+            destroyedBlockCount = 0;
+
+            // Call the initialization logic directly
+            setupNewGameLevel();
+
+        } catch (Exception e) {
+            logger.error("An error occurred in prepareForNextLevel() Method: " + e.getMessage(), e);
+        }
+    }
+
+    private void initializeAndStartGameEngine() {
+        engine = new GameEngine(120);
+        engine.setOnAction(this);
+        engine.start();
+    }
+
+    // Extract common initialization logic into a separate method
+    private void setupNewGameLevel() {
+        // Add the initialization logic here
+        levelUp(main);
+        if (engine != null) {
+            initializeGameElements();
+            initializeAndStartGameEngine();
+            main.root.getChildren().clear();
+            main.setUpGameUI();
+            main.scene.setOnKeyPressed(this);
+        }
+    }
+
+    private void initializeGameElements() {
+        ball = initBall();
+        paddle = initPaddle();
+        initBoard(blocks);
+    }
+
+    // Method to restart the game from the beginning
+    public void resetGameToStart() {
+        try {
+            // Reset game variables for a fresh start
+            engine.stop();
+            engine = null;
+            main.finalScore = getScore();
+            blocks.clear();
+            bonuses.clear();
+            ball = null;
+            paddle = null;
+            destroyedBlockCount = 0;
+            time = 0;
+            goldTime = 0;
+        } catch (Exception e) {
+            logger.error("An error occurred in resetGameToStart() Method: " + e.getMessage(), e);
+        }
     }
 
 }

@@ -1,14 +1,20 @@
 package brickGame.engine;
 
-import java.util.concurrent.Executors;
+import javafx.application.Platform;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class GameEngine {
 
+    private static final Logger logger = LoggerFactory.getLogger(GameEngine.class);
+
     private OnAction onAction;
     private int fps = 15;
-    private ExecutorService executorService;
+    private final ExecutorService executorService;
     public boolean isStopped = true;
     private long time = 0;
 
@@ -28,36 +34,42 @@ public class GameEngine {
         this.fps = 360 / fps;
     }
 
-    private void Update() {
-        Runnable updateTask = () -> {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    onAction.updateGameFrame();
+    private void onUpdate() {
+        executorService.execute(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Platform.runLater(() -> onAction.updateGameFrame());
                     Thread.sleep(fps);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Exception e) {
+                    logger.error("An error occurred in Update() Method: " + e.getMessage(), e);
+                    break;
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
             }
-        };
-        executorService.submit(updateTask);
+        });
     }
 
-    private void PhysicsCalculation() {
-        Runnable physicsTask = () -> {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    onAction.performPhysicsCalculations();
+    private void onPhysicsCalculation() {
+        executorService.execute(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Platform.runLater(() -> onAction.performPhysicsCalculations());
                     Thread.sleep(fps);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Exception e) {
+                    logger.error("An error occurred in onPhysicsCalculation() Method: " + e.getMessage(), e);
+                    break;
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
             }
-        };
-        executorService.submit(physicsTask);
+        });
     }
 
-    private void TimeStart() {
-        Runnable timeTask = () -> {
+    private void timeStart() {
+        executorService.execute(() -> {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
                     time++;
@@ -66,17 +78,19 @@ public class GameEngine {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                logger.error("An error occurred in timeStart() Method: " + e.getMessage(), e);
+
             }
-        };
-        executorService.submit(timeTask);
+        });
     }
 
     public void start() {
         time = 0;
+        onUpdate();
+        onPhysicsCalculation();
+        timeStart();
         isStopped = false;
-        Update();
-        PhysicsCalculation();
-        TimeStart();
     }
 
     public void stop() {

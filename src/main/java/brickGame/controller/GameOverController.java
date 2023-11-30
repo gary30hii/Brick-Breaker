@@ -14,13 +14,11 @@ public class GameOverController {
     private Main mainApp; // Reference to the main application instance
     public Button startGameButton;
     public Button goToMenuButton;
-    private int finalScore;
 
     public void setMainApp(Main mainApp, int totalScore) {
         this.mainApp = mainApp;
-        this.finalScore = totalScore;
         // Update the score label here if needed
-        score.setText(String.valueOf(finalScore));
+        score.setText(String.valueOf(totalScore));
     }
 
     @FXML
@@ -35,9 +33,4 @@ public class GameOverController {
         mainApp.switchToMenu();
     }
 
-    @FXML
-    private void goToLeaderboard() throws IOException {
-        // Assuming MainApplication has a method to switch scenes
-        mainApp.switchToLeaderboard();
-    }
 }

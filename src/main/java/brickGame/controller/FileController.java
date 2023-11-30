@@ -19,7 +19,7 @@ public class FileController {
     private static final Logger logger = LoggerFactory.getLogger(FileController.class);
     private final LoadSave loadSave = new LoadSave();
     // Load a saved game state
-    public void loadSavedGameState(Main main, GameController gameController, Ball ball, Paddle paddle) {
+    public void loadSavedGameState(GameController gameController, Ball ball, Paddle paddle) {
 
         loadSave.read();
         // Load game state from the saved data
@@ -38,21 +38,21 @@ public class FileController {
         gameController.setLevel(loadSave.level);
         gameController.setScore(loadSave.score);
         gameController.setHeart(loadSave.heart);
-        main.destroyedBlockCount = loadSave.destroyedBlockCount;
+        gameController.setDestroyedBlockCount(loadSave.destroyedBlockCount);
         ball.setXBall(loadSave.xBall);
         ball.setYBall(loadSave.yBall);
         paddle.setXPaddle(loadSave.xPaddle);
         paddle.setYPaddle(loadSave.yPaddle);
-        main.time = loadSave.time;
-        main.goldTime = loadSave.goldTime;
+        gameController.setTime(loadSave.time);
+        gameController.setGoldTime(loadSave.goldTime);
         ball.setVX(loadSave.vX);
 
-        gameController.blocks.clear();
-        gameController.bonuses.clear();
+        gameController.getBlocks().clear();
+        gameController.getBonuses().clear();
 
         for (BlockSerializable ser : loadSave.blocks) {
             Block newBlock = new Block(ser.row, ser.column, Color.BLUE, ser.type, ser.isDestroyed);
-            gameController.blocks.add(newBlock);
+            gameController.getBlocks().add(newBlock);
         }
     }
 
@@ -68,14 +68,14 @@ public class FileController {
                 outputStream.writeInt(gameController.getLevel());
                 outputStream.writeInt(gameController.getScore());
                 outputStream.writeInt(gameController.getHeart());
-                outputStream.writeInt(main.destroyedBlockCount);
+                outputStream.writeInt(gameController.getDestroyedBlockCount());
 
                 outputStream.writeDouble(ball.getXBall());
                 outputStream.writeDouble(ball.getYBall());
                 outputStream.writeDouble(paddle.getXPaddle());
                 outputStream.writeDouble(paddle.getYPaddle());
-                outputStream.writeLong(main.time);
-                outputStream.writeLong(main.goldTime);
+                outputStream.writeLong(gameController.getTime());
+                outputStream.writeLong(gameController.getGoldTime());
                 outputStream.writeDouble(ball.getVX());
 
                 outputStream.writeBoolean(gameController.isExistHeartBlock());
@@ -92,8 +92,8 @@ public class FileController {
                 outputStream.writeBoolean(ball.isCollideToTopBlock());
 
                 // Save blocks
-                outputStream.writeInt(gameController.blocks.size()); // Write the size of the block list
-                for (Block block : gameController.blocks) {
+                outputStream.writeInt(gameController.getBlocks().size()); // Write the size of the block list
+                for (Block block : gameController.getBlocks()) {
                     outputStream.writeInt(block.row);
                     outputStream.writeInt(block.column);
                     outputStream.writeInt(block.type);
