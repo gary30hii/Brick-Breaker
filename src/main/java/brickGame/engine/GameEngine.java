@@ -1,66 +1,120 @@
 package brickGame.engine;
 
-import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class GameEngine {
 
-    private OnAction onAction;
-    private boolean isStopped = true;
-    private int frameDelay = 66; // Default for ~15 fps (1000ms / 15)
-    private long lastUpdateTime = 0;
+    private static final Logger logger = LoggerFactory.getLogger(GameEngine.class);
 
-    public interface OnAction {
-        void updateGameFrame();
-        void onInit();
-        void performPhysicsCalculations();
-        void onTime(long time);
+    private OnAction onAction;
+    private int fps = 15;
+    private final ExecutorService executorService;
+    public boolean isStopped = true;
+    private long time = 0;
+
+    public GameEngine(int fps) {
+        executorService = Executors.newFixedThreadPool(3);
+        setFps(fps);
     }
 
     public void setOnAction(OnAction onAction) {
         this.onAction = onAction;
     }
 
+    /**
+     * @param fps set fps and we convert it to millisecond
+     */
     public void setFps(int fps) {
-        if (fps <= 0) {
-            throw new IllegalArgumentException("FPS must be greater than zero");
-        }
-        this.frameDelay = 120 / fps;
+        this.fps = 360 / fps;
     }
 
-    private void gameLoop() {
-        new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                if (!isStopped) {
-                    if (lastUpdateTime == 0) {
-                        lastUpdateTime = now;
-                    }
-
-                    long elapsedNanoSeconds = now - lastUpdateTime;
-                    long elapsedMilliseconds = elapsedNanoSeconds / 1_000_000;
-
-                    if (elapsedMilliseconds > frameDelay) {
-                        onAction.updateGameFrame();
-                        onAction.performPhysicsCalculations();
-                        onAction.onTime(System.currentTimeMillis());
-                        lastUpdateTime = now;
-                    }
+    private void onUpdate() {
+        executorService.execute(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Platform.runLater(() -> onAction.updateGameFrame());
+                    Thread.sleep(fps);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Exception e) {
+                    logger.error("An error occurred in Update() Method: " + e.getMessage(), e);
+                    break;
                 }
             }
-        }.start();
+        });
+    }
+
+    private void onPhysicsCalculation() {
+        executorService.execute(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Platform.runLater(() -> onAction.performPhysicsCalculations());
+                    Thread.sleep(fps);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Exception e) {
+                    logger.error("An error occurred in onPhysicsCalculation() Method: " + e.getMessage(), e);
+                    break;
+                }
+            }
+        });
+    }
+
+    private void timeStart() {
+        executorService.execute(() -> {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    time++;
+                    onAction.onTime(time);
+                    Thread.sleep(1);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                logger.error("An error occurred in timeStart() Method: " + e.getMessage(), e);
+
+            }
+        });
     }
 
     public void start() {
-        if (!isStopped) {
-            return; // The game is already running
-        }
+        time = 0;
+        onUpdate();
+        onPhysicsCalculation();
+        timeStart();
         isStopped = false;
-        onAction.onInit();
-        gameLoop();
     }
 
     public void stop() {
-        isStopped = true;
-        lastUpdateTime = 0;
+        if (!isStopped) {
+            isStopped = true;
+            executorService.shutdownNow();
+            try {
+                if (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
+                    executorService.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executorService.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public interface OnAction {
+        void updateGameFrame();
+
+        void onInit();
+
+        void performPhysicsCalculations();
+
+        void onTime(long time);
     }
 }

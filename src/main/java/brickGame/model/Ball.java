@@ -2,8 +2,7 @@ package brickGame.model;
 
 import brickGame.Main;
 import brickGame.controller.GameController;
-import brickGame.controller.Score;
-import brickGame.engine.GameEngine;
+import brickGame.controller.GameUIController;
 import javafx.scene.image.Image;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Circle;
@@ -17,12 +16,13 @@ public class Ball extends Circle implements Serializable {
     private double xBall;
     private double yBall;
     private double vX = 1.0;
+    public static final int BALL_RADIUS = 10;
 
 
     public Ball(int xBall, int yBall){
         this.xBall = xBall;
         this.yBall = yBall;
-        setRadius(Main.BALL_RADIUS);
+        setRadius(BALL_RADIUS);
         setFill(new ImagePattern(new Image("ball.png")));
     }
 
@@ -154,9 +154,9 @@ public class Ball extends Circle implements Serializable {
     }
 
     // Handle physics for the game ball
-    public void updateBallMovement(Main main, GameController gameController, GameEngine engine) {
+    public void updateBallMovement(Main main, GameController gameController, Paddle paddle) {
 
-        double vY = 3.0;
+        double vY = 1.0;
         if (goDownBall) {
             setYBall(getYBall() + vY);
         } else {
@@ -181,22 +181,21 @@ public class Ball extends Circle implements Serializable {
             if (!isGoldStatus) {
                 //TODO game-over
                 gameController.setHeart(gameController.getHeart() - 1);
-                new Score().show((double) Main.SCENE_WIDTH / 2, (double) Main.SCENE_HEIGHT / 2, -1, main);
+                new GameUIController().show((double) Main.SCENE_WIDTH / 2, (double) Main.SCENE_HEIGHT / 2, -1, main);
 
                 if (gameController.getHeart() == 0) {
-                    new Score().showGameOver(main);
-                    engine.stop();
+                    main.showGameOver();
                 }
             }
         }
 
-        if (getYBall() >= Main.Y_PADDLE - Main.BALL_RADIUS) {
-            if (getXBall() >= Main.X_PADDLE && getXBall() <= Main.X_PADDLE + Main.PADDLE_WIDTH) {
+        if (getYBall() >= paddle.getYPaddle() - BALL_RADIUS) {
+            if (getXBall() >= paddle.getXPaddle() && getXBall() <= paddle.getXPaddle() + paddle.getPaddleWidth()) {
                 resetCollisionStates();
                 collideToPaddle = true;
                 goDownBall = false;
 
-                double relation = (getXBall() - Main.X_PADDLE_CENTER) / ((double) Main.PADDLE_WIDTH / 2);
+                double relation = (getXBall() - (paddle.getXPaddle() + (double) paddle.getPaddleWidth() / 2)) / ((double) paddle.getPaddleWidth() / 2);
 
                 if (Math.abs(relation) <= 0.3) {
                     vX = Math.abs(relation);
@@ -206,7 +205,7 @@ public class Ball extends Circle implements Serializable {
                     vX = (Math.abs(relation) * 2) + (gameController.getLevel() / 3.500);
                 }
 
-                collideToPaddleAndMoveToRight = getXBall() - Main.X_PADDLE_CENTER > 0;
+                collideToPaddleAndMoveToRight = getXBall() - (paddle.getXPaddle() + (double) paddle.getPaddleWidth() / 2) > 0;
             }
         }
 
