@@ -26,7 +26,7 @@ public class GameController implements EventHandler<KeyEvent> {
     private Ball ball;
     private Pane root; // The root pane where game elements are added
     private boolean isExistHeartBlock = false;
-    private final int finalLevel = 3;
+    private final int finalLevel = 10;
 
 
     public GameController(Main main, int level, int score, int heart) {
@@ -145,9 +145,9 @@ public class GameController implements EventHandler<KeyEvent> {
                     return; //paddle stop moving to the left when it touch the left wall
                 }
                 if (direction == RIGHT) {
-                    paddle.setXPaddle(paddle.getXPaddle() + 2);
+                    paddle.setXPaddle(paddle.getXPaddle() + 1);
                 } else {
-                    paddle.setXPaddle(paddle.getXPaddle() - 2);
+                    paddle.setXPaddle(paddle.getXPaddle() - 1);
                 }
                 try {
                     Thread.sleep(sleepTime);

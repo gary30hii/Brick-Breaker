@@ -156,7 +156,7 @@ public class Ball extends Circle implements Serializable {
     // Handle physics for the game ball
     public void updateBallMovement(Main main, GameController gameController, Paddle paddle) {
 
-        double vY = 3.0;
+        double vY = 1.0;
         if (goDownBall) {
             setYBall(getYBall() + vY);
         } else {
