@@ -20,7 +20,7 @@
                 <Font name="Al Tarikh Regular" size="37.0" />
             </font>
         </Label>
-        <Label id="bestScore" layoutX="71.0" layoutY="304.0" prefHeight="71.0" prefWidth="217.0" styleClass="score-label" text="Best Score:                             250" />
+        <Label id="bestScore" fx:id="bestScore" layoutX="71.0" layoutY="304.0" prefHeight="71.0" prefWidth="217.0" styleClass="score-label" text="Best Score:                             250" />
         <Label id="score" fx:id="score" alignment="CENTER" layoutY="192.0" prefHeight="118.0" prefWidth="359.0" styleClass="score" text="0" textAlignment="CENTER">
             <font>
                 <Font size="96.0" />

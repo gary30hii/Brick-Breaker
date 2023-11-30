@@ -36,7 +36,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     private boolean isExistHeartBlock = false;
     private int destroyedBlockCount;
 
-    private final int finalLevel = 18;
+    private final int finalLevel = 3;
     private long time;
     private long goldTime;
 
@@ -192,6 +192,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
         }
 
         if (getLevel() == finalLevel) {
+            score = score + heart * 5;
             resetGameToStart();
             main.showWin();
         }

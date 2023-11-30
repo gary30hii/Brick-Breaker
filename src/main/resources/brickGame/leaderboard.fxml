@@ -22,17 +22,17 @@
          <Font name="BM DoHyeon OTF" size="29.0" />
       </font>
    </Label>
-   <Label alignment="CENTER" layoutX="45.0" layoutY="224.0" styleClass="leaderboard-score" text="100">
+   <Label fx:id="thirdBestScore" alignment="CENTER" contentDisplay="CENTER" layoutX="328.0" layoutY="229.0" prefHeight="91.0" prefWidth="167.0" styleClass="leaderboard-score" text="100">
       <font>
          <Font name="Al Tarikh Regular" size="65.0" />
       </font>
    </Label>
-   <Label alignment="CENTER" layoutX="206.0" layoutY="224.0" styleClass="leaderboard-score" text="200">
+   <Label fx:id="secondBestScore" alignment="CENTER" layoutX="-24.0" layoutY="229.0" prefHeight="91.0" prefWidth="217.0" styleClass="leaderboard-score" text="200">
       <font>
          <Font name="Al Tarikh Regular" size="65.0" />
       </font>
    </Label>
-   <Label alignment="CENTER" layoutX="369.0" layoutY="224.0" styleClass="leaderboard-score" text="300">
+   <Label fx:id="bestScore" alignment="CENTER" contentDisplay="CENTER" layoutX="159.0" layoutY="229.0" prefHeight="91.0" prefWidth="183.0" styleClass="leaderboard-score" text="300">
       <font>
          <Font name="Al Tarikh Regular" size="65.0" />
       </font>

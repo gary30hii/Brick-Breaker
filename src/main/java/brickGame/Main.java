@@ -103,6 +103,7 @@ public class Main extends Application {
     public void showWin() {
         try {
             gameController = null;
+            new FileController().saveLeaderboard(finalScore);
             loader = new FXMLLoader(getClass().getResource("won.fxml"));
             Parent gameRoot = loader.load();
             WonController wonController = loader.getController(); // Get the controller instance
@@ -118,6 +119,7 @@ public class Main extends Application {
         try {
             gameController.resetGameToStart();
             gameController = null;
+            new FileController().saveLeaderboard(finalScore);
             loader = new FXMLLoader(getClass().getResource("gameover.fxml"));
             Parent gameRoot = loader.load();
             GameOverController gameOverController = loader.getController(); // Get the controller instance

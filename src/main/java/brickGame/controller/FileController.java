@@ -21,7 +21,7 @@ public class FileController {
     // Load a saved game state
     public void loadSavedGameState(GameController gameController, Ball ball, Paddle paddle) {
 
-        loadSave.read();
+        loadSave.readGameData();
         // Load game state from the saved data
         gameController.setExistHeartBlock(loadSave.isExistHeartBlock);
         ball.setGoldStatus(loadSave.isGoldStatus);
@@ -60,7 +60,7 @@ public class FileController {
     public void saveCurrentGameState(Main main, GameController gameController, Ball ball, Paddle paddle) {
         new Thread(() -> {
             new File(loadSave.getSavePathDir());
-            File file = new File(loadSave.getSavePath());
+            File file = new File(loadSave.getGameDataPath());
             ObjectOutputStream outputStream = null;
             try {
                 outputStream = new ObjectOutputStream(new FileOutputStream(file));
@@ -103,7 +103,7 @@ public class FileController {
                 new GameUIController().showMessage("Game Saved", main);
 
             } catch (IOException e) {
-                logger.error("An error occurred in saveGame() Method: " + e.getMessage(), e);
+                logger.error("An error occurred in saveCurrentGameState() Method: " + e.getMessage(), e);
             } finally {
                 try {
                     if (outputStream != null) {
@@ -111,10 +111,62 @@ public class FileController {
                         outputStream.close();
                     }
                 } catch (IOException e) {
-                    logger.error("An error occurred in saveGame() Method: " + e.getMessage(), e);
+                    logger.error("An error occurred in saveCurrentGameState() Method: " + e.getMessage(), e);
                 }
             }
         }).start();
 
     }
+
+    public void saveLeaderboard(int newScore) {
+        // Ensure the directory exists
+        File directory = new File(loadSave.getSavePathDir());
+        if (!directory.exists()) {
+            boolean isDirCreated = directory.mkdirs();
+            if (!isDirCreated) {
+                logger.error("Failed to create directory: " + directory.getPath());
+                return; // Exit the method if the directory cannot be created
+            }
+        }
+
+        File file = new File(loadSave.getLeaderboardDataPath());
+        ObjectOutputStream outputStream = null;
+
+        try {
+            loadSave.readLeaderboard();
+            // Load current high scores
+            int highest = loadSave.bestScore;
+            int secondHigh = loadSave.secondBestScore;
+            int thirdHigh = loadSave.thirdBestScore;
+
+            // Compare and update scores
+            if (newScore > highest) {
+                thirdHigh = secondHigh;
+                secondHigh = highest;
+                highest = newScore;
+            } else if (newScore > secondHigh) {
+                thirdHigh = secondHigh;
+                secondHigh = newScore;
+            } else if (newScore > thirdHigh) {
+                thirdHigh = newScore;
+            }
+
+            // Write the updated scores
+            outputStream = new ObjectOutputStream(new FileOutputStream(file));
+            outputStream.writeInt(highest);
+            outputStream.writeInt(secondHigh);
+            outputStream.writeInt(thirdHigh);
+        } catch (IOException e) {
+            logger.error("An error occurred in saveLeaderboard() Method: " + e.getMessage(), e);
+        } finally {
+            if (outputStream != null) {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    logger.error("An error occurred while closing stream in saveLeaderboard(): " + e.getMessage(), e);
+                }
+            }
+        }
+    }
+
 }

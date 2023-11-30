@@ -1,6 +1,9 @@
 package brickGame.controller;
 
+import brickGame.LoadSave;
 import brickGame.Main;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -12,17 +15,18 @@ public class WonController {
     public Pane backgroundPane;
     public Label score;
     public Button scoreButton;
+    public Label bestScore;
     private Main mainApp; // Reference to the main application instance
     public Button startGameButton;
     public Button goToMenuButton;
+    private final IntegerProperty finalScoreProperty = new SimpleIntegerProperty(this, "finalScore", 0);
 
-    private int finalScore;
 
     public void setMainApp(Main mainApp, int totalScore) {
         this.mainApp = mainApp;
-        this.finalScore = totalScore;
-        // Update the score label here if needed
-        score.setText(String.valueOf(finalScore));
+        score.setText(String.valueOf(totalScore));
+        updateFinalScore();
+        bestScore.textProperty().bind(finalScoreProperty.asString("Best Score:                                 %d"));
     }
 
     @FXML
@@ -41,5 +45,12 @@ public class WonController {
     private void goToLeaderboard() throws IOException {
         // Assuming MainApplication has a method to switch scenes
         mainApp.switchToLeaderboard();
+    }
+
+    public void updateFinalScore() {
+        // Call this method whenever you want to update the score
+        LoadSave score = new LoadSave();
+        score.readLeaderboard();
+        finalScoreProperty.set(score.bestScore);
     }
 }
