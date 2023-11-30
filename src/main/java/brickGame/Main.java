@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class Main extends Application implements GameEngine.OnAction {
 
@@ -44,9 +43,8 @@ public class Main extends Application implements GameEngine.OnAction {
     private GameEngine engine;
     private GameController gameController;
     private FileController fileController;
-    public final ArrayList<Block> blocks = new ArrayList<>();
-    public final ArrayList<Bonus> bonuses = new ArrayList<>();
-    private final int finalLevel = 3;
+
+    private final int finalLevel = 10;
     private int totalScore = 0;
 
     // Initialize the game and UI elements
@@ -77,7 +75,7 @@ public class Main extends Application implements GameEngine.OnAction {
         // Casting the root to Pane and adding the circle
         root = (Pane) gameRoot;
 
-        gameController = new GameController(this, 0, 0, 3);
+        gameController = new GameController(this, 0, 0, 5);
         onInit();
     }
 
@@ -89,28 +87,24 @@ public class Main extends Application implements GameEngine.OnAction {
 
     // Method to prepare for the next game level
     private void prepareForNextLevel() {
-        Platform.runLater(() -> {
-            try {
-                // Reset variables for the next level
-                ball.setVX(1.000);
-                engine.stop();
-                ball.resetCollisionStates();
-                ball.setGoDownBall(true);
-                ball.setGoldStatus(false);
-                gameController.setExistHeartBlock(false);
-                time = 0;
-                goldTime = 0;
-                blocks.clear();
-                bonuses.clear();
-                destroyedBlockCount = 0;
+        try {
+            // Reset variables for the next level
+            ball.setVX(1.000);
+            engine.stop();
+            ball.resetCollisionStates();
+            ball.setGoDownBall(true);
+            gameController.setExistHeartBlock(false);
+            time = 0;
+            gameController.blocks.clear();
+            gameController.bonuses.clear();
+            destroyedBlockCount = 0;
 
-                // Call the initialization logic directly
-                setupNewGameLevel();
+            // Call the initialization logic directly
+            setupNewGameLevel();
 
-            } catch (Exception e) {
-                logger.error("An error occurred in prepareForNextLevel() Method: " + e.getMessage(), e);
-            }
-        });
+        } catch (Exception e) {
+            logger.error("An error occurred in prepareForNextLevel() Method: " + e.getMessage(), e);
+        }
     }
 
     // Extract common initialization logic into a separate method
@@ -129,7 +123,7 @@ public class Main extends Application implements GameEngine.OnAction {
     private void initializeGameElements() {
         ball = gameController.initBall();
         paddle = gameController.initPaddle();
-        gameController.initBoard(blocks);
+        gameController.initBoard(gameController.blocks);
     }
 
     private void setUpGameUI() {
@@ -151,7 +145,7 @@ public class Main extends Application implements GameEngine.OnAction {
 
         root.getChildren().addAll(paddle, ball, scoreLabel, heartLabel, levelLabel);
 
-        for (Block block : blocks) {
+        for (Block block : gameController.blocks) {
             if (block.rect != null && !block.isDestroyed) {
                 root.getChildren().add(block.rect);
             }
@@ -163,31 +157,26 @@ public class Main extends Application implements GameEngine.OnAction {
         scene.setOnKeyPressed(gameController);
     }
 
-    public void loadGame() {
-        fileController.loadSavedGameState(this, gameController, ball, paddle);
-    }
-
     private void initializeAndStartGameEngine() {
-        engine = new GameEngine();
+        engine = new GameEngine(120);
         engine.setOnAction(this);
-        engine.setFps(120);
         engine.start();
     }
-
 
 
     // Method to restart the game from the beginning
     public void resetGameToStart() {
         try {
             // Reset game variables for a fresh start
+            engine.stop();
             totalScore = gameController.getScore();
             ball = null;
             gameController = null;
             destroyedBlockCount = 0;
             time = 0;
             goldTime = 0;
-            blocks.clear();
-            bonuses.clear();
+            gameController.blocks.clear();
+            gameController.bonuses.clear();
         } catch (Exception e) {
             logger.error("An error occurred in resetGameToStart() Method: " + e.getMessage(), e);
         }
@@ -198,27 +187,24 @@ public class Main extends Application implements GameEngine.OnAction {
     public void updateGameFrame() {
         Platform.runLater(() -> {
 
-            if (gameController != null) {
-                scoreLabel.setText("Score: " + gameController.getScore());
-                heartLabel.setText("Heart : " + gameController.getHeart());
-                paddle.setX(paddle.getXPaddle());
-                paddle.setY(paddle.getYPaddle());
-                ball.setCenterX(ball.getXBall());
-                ball.setCenterY(ball.getYBall());
+            scoreLabel.setText("Score: " + gameController.getScore());
+            heartLabel.setText("Heart : " + gameController.getHeart());
+            paddle.setX(paddle.getXPaddle());
+            paddle.setY(paddle.getYPaddle());
+            ball.setCenterX(ball.getXBall());
+            ball.setCenterY(ball.getYBall());
 
-                for (Bonus choco : bonuses) {
-                    choco.choco.setY(choco.y);
-                }
+            for (Bonus choco : gameController.bonuses) {
+                choco.choco.setY(choco.y);
+            }
 
-                if (destroyedBlockCount == blocks.size() && gameController.getLevel() < finalLevel) {
-                    prepareForNextLevel();
-                }
+            if (destroyedBlockCount == gameController.blocks.size() && gameController.getLevel() < finalLevel) {
+                prepareForNextLevel();
             }
         });
 
-
         if (ball.getYBall() >= Block.getPaddingTop() && ball.getYBall() <= (Block.getHeight() * (gameController.getLevel() + 1)) + Block.getPaddingTop()) {
-            for (final Block block : blocks) {
+            for (final Block block : gameController.blocks) {
                 int hitCode = block.checkHitToBlock(ball.getXBall(), ball.getYBall(), Ball.BALL_RADIUS);
                 if (hitCode != Block.NO_HIT) {
                     gameController.setScore(gameController.getScore() + 1);
@@ -234,7 +220,7 @@ public class Main extends Application implements GameEngine.OnAction {
                         final Bonus choco = new Bonus(block.row, block.column);
                         choco.timeCreated = time;
                         Platform.runLater(() -> root.getChildren().add(choco.choco));
-                        bonuses.add(choco);
+                        gameController.bonuses.add(choco);
                     }
 
                     if (block.type == Block.BLOCK_STAR) {
@@ -260,8 +246,6 @@ public class Main extends Application implements GameEngine.OnAction {
 
                 }
 
-                //TODO hit to break and some work here....
-                //System.out.println("Break in row:" + block.row + " and column:" + block.column + " hit");
             }
         }
     }
@@ -274,7 +258,7 @@ public class Main extends Application implements GameEngine.OnAction {
             initializeGameElements();
         } else {
             initializeGameElements();
-            loadGame();
+            fileController.loadSavedGameState(this, gameController, ball, paddle);
             loadFromSave = false;
         }
         initializeAndStartGameEngine();
@@ -288,11 +272,10 @@ public class Main extends Application implements GameEngine.OnAction {
 
         if (time - goldTime > 5000) {
             ball.setFill(new ImagePattern(new Image("ball.png")));
-            root.getStyleClass().remove("goldRoot");
             ball.setGoldStatus(false);
         }
 
-        for (Bonus choco : bonuses) {
+        for (Bonus choco : gameController.bonuses) {
             if (choco.y > SCENE_HEIGHT || choco.taken) {
                 continue;
             }
@@ -328,7 +311,6 @@ public class Main extends Application implements GameEngine.OnAction {
 
     public void showGameOver() {
         try {
-            engine.stop();
             resetGameToStart();
             loader = new FXMLLoader(getClass().getResource("gameover.fxml"));
             Parent gameRoot = loader.load();

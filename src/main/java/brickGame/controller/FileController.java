@@ -47,12 +47,12 @@ public class FileController {
         main.goldTime = loadSave.goldTime;
         ball.setVX(loadSave.vX);
 
-        main.blocks.clear();
-        main.bonuses.clear();
+        gameController.blocks.clear();
+        gameController.bonuses.clear();
 
         for (BlockSerializable ser : loadSave.blocks) {
             Block newBlock = new Block(ser.row, ser.column, Color.BLUE, ser.type, ser.isDestroyed);
-            main.blocks.add(newBlock);
+            gameController.blocks.add(newBlock);
         }
     }
 
@@ -92,8 +92,8 @@ public class FileController {
                 outputStream.writeBoolean(ball.isCollideToTopBlock());
 
                 // Save blocks
-                outputStream.writeInt(main.blocks.size()); // Write the size of the block list
-                for (Block block : main.blocks) {
+                outputStream.writeInt(gameController.blocks.size()); // Write the size of the block list
+                for (Block block : gameController.blocks) {
                     outputStream.writeInt(block.row);
                     outputStream.writeInt(block.column);
                     outputStream.writeInt(block.type);

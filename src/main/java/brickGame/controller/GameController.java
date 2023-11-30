@@ -3,10 +3,10 @@ package brickGame.controller;
 import brickGame.Main;
 import brickGame.model.Ball;
 import brickGame.model.Block;
+import brickGame.model.Bonus;
 import brickGame.model.Paddle;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,8 @@ public class GameController implements EventHandler<KeyEvent> {
     private int heart;
     private Paddle paddle;
     private Ball ball;
-    private Pane root; // The root pane where game elements are added
+    public final ArrayList<Block> blocks = new ArrayList<>();
+    public final ArrayList<Bonus> bonuses = new ArrayList<>();
     private boolean isExistHeartBlock = false;
     private final int finalLevel = 10;
 
