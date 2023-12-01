@@ -2,7 +2,6 @@ package brickGame.model;
 
 
 import javafx.scene.image.Image;
-import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 
@@ -13,7 +12,6 @@ public class Block implements Serializable {
     public int row;
     public int column;
     public boolean isDestroyed;
-    public final Color color;
     public int type;
 
     public int x;
@@ -32,15 +30,16 @@ public class Block implements Serializable {
     public static int HIT_TOP = 3;
 
     public static int BLOCK_NORMAL = 99;
-    public static int BLOCK_CHOCO = 100;
+    public static int BLOCK_THREE = 100;
     public static int BLOCK_STAR = 101;
     public static int BLOCK_HEART = 102;
+    public static int BLOCK_FOUL = 103;
 
 
-    public Block(int row, int column, Color color, int type, boolean isDestroyed) {
+
+    public Block(int row, int column, int type, boolean isDestroyed) {
         this.row = row;
         this.column = column;
-        this.color = color;
         this.type = type;
         this.isDestroyed = isDestroyed;
         draw();
@@ -58,20 +57,26 @@ public class Block implements Serializable {
         rect.setX(x);
         rect.setY(y);
 
-        if (type == BLOCK_CHOCO) {
-            Image image = new Image("choco.jpg");
+        // Set the border color and width
+        rect.setStroke(javafx.scene.paint.Color.web("#f6c64b"));
+        rect.setStrokeWidth(2);
+
+        if (type == BLOCK_THREE || type == BLOCK_FOUL) {
+            Image image = new Image("mysterious-block.png");
             ImagePattern pattern = new ImagePattern(image);
             rect.setFill(pattern);
         } else if (type == BLOCK_HEART) {
-            Image image = new Image("heart.jpg");
+            Image image = new Image("heart.png");
             ImagePattern pattern = new ImagePattern(image);
             rect.setFill(pattern);
         } else if (type == BLOCK_STAR) {
-            Image image = new Image("star.jpg");
+            Image image = new Image("star.png");
             ImagePattern pattern = new ImagePattern(image);
             rect.setFill(pattern);
         } else {
-            rect.setFill(color);
+            Image image = new Image("normal.png");
+            ImagePattern pattern = new ImagePattern(image);
+            rect.setFill(pattern);
         }
 
     }

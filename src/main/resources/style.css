@@ -6,13 +6,7 @@
 }
 
 .game-background-pane {
-    -fx-background-image: url('game-background.jpg');
-    -fx-background-size: cover;
-    -fx-background-repeat: no-repeat;
-}
-
-.game-gold-background-pane {
-    -fx-background-image: url('gold-game-background.jpg');
+    -fx-background-image: url('game-background.png');
     -fx-background-size: cover;
     -fx-background-repeat: no-repeat;
 }

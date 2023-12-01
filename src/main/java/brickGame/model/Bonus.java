@@ -14,11 +14,12 @@ public class Bonus implements Serializable {
     public double y;
     public long timeCreated;
     public boolean taken = false;
+    private int type;
 
-    public Bonus(int row, int column) {
+    public Bonus(int row, int column, int type) {
         x = (column * (Block.getWidth())) + Block.getPaddingH() + ((double) Block.getWidth() / 2) - 15;
         y = (row * (Block.getHeight())) + Block.getPaddingTop() + ((double) Block.getHeight() / 2) - 15;
-
+        this.type = type;
         draw();
     }
 
@@ -31,14 +32,25 @@ public class Bonus implements Serializable {
         choco.setY(y);
 
         String url;
-        if (new Random().nextInt(20) % 2 == 0) {
-            url = "bonus1.png";
+        if (type == Block.BLOCK_FOUL){
+            url = "bonus3.png";
         } else {
-            url = "bonus2.png";
+            if (new Random().nextInt(20) % 2 == 0) {
+                url = "bonus1.png";
+            } else {
+                url = "bonus2.png";
+            }
         }
 
         choco.setFill(new ImagePattern(new Image(url)));
     }
 
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
 
 }
