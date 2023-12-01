@@ -10,7 +10,6 @@ import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +26,8 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     private int level;
     private int score;
     private int heart;
+    private final BackgroundMusicController bgMusic = new BackgroundMusicController("src/main/resources/game-bgm.mp3");
+
     private GameEngine engine;
     private Paddle paddle;
     private Ball ball;
@@ -36,12 +37,12 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     private boolean isExistHeartBlock = false;
     private int destroyedBlockCount;
 
-    private final int finalLevel = 3;
+    private final int finalLevel = 18;
     private long time;
     private long goldTime;
 
     public GameController(Main main, int level, int score, int heart) {
-        this.main =main;
+        this.main = main;
         this.level = level;
         this.score = score;
         this.heart = heart;
@@ -128,25 +129,26 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
                     continue; // Empty block
                 }
                 int type = determineBlockType(r);
-                Color color = Color.BLUE;
-                blocks.add(new Block(j, i, color, type, false));
+                blocks.add(new Block(j, i, type, false));
             }
         }
     }
 
     private int determineBlockType(int randomValue) {
         // Logic to determine the block type
-        if (randomValue % 10 == 1) {
-            return Block.BLOCK_CHOCO;
-        } else if (randomValue % 10 == 2) {
+        if (randomValue % 15 == 1) {
+            return Block.BLOCK_THREE;
+        } else if (randomValue % 15 == 2) {
             if (!isExistHeartBlock) {
                 isExistHeartBlock = true;
                 return Block.BLOCK_HEART;
             } else {
                 return Block.BLOCK_NORMAL;
             }
-        } else if (randomValue % 10 == 3) {
+        } else if (randomValue % 15 == 3) {
             return Block.BLOCK_STAR;
+        } else if (randomValue % 15 == 4 && level > 5) {
+            return Block.BLOCK_FOUL;
         } else {
             return Block.BLOCK_NORMAL;
         }
@@ -201,71 +203,83 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     // Method to handle game updates
     @Override
     public void updateGameFrame() {
-        Platform.runLater(() -> {
+        if (engine != null) {
+            Platform.runLater(() -> {
 
-            main.updateGameData(getScore(), getHeart());
-            paddle.setX(paddle.getXPaddle());
-            paddle.setY(paddle.getYPaddle());
-            ball.setCenterX(ball.getXBall());
-            ball.setCenterY(ball.getYBall());
+                main.updateGameData(getScore(), getHeart());
+                paddle.setX(paddle.getXPaddle());
+                paddle.setY(paddle.getYPaddle());
+                ball.setCenterX(ball.getXBall());
+                ball.setCenterY(ball.getYBall());
 
-            for (Bonus choco : bonuses) {
-                choco.choco.setY(choco.y);
-            }
+                for (Bonus choco : bonuses) {
+                    choco.choco.setY(choco.y);
+                }
 
-            if (destroyedBlockCount == blocks.size() && getLevel() < finalLevel) {
-                prepareForNextLevel();
-            }
-        });
+                if (destroyedBlockCount == blocks.size() && getLevel() < finalLevel) {
+                    prepareForNextLevel();
+                }
+            });
 
-        if (ball.getYBall() >= Block.getPaddingTop() && ball.getYBall() <= (Block.getHeight() * (getLevel() + 1)) + Block.getPaddingTop()) {
-            for (final Block block : blocks) {
-                int hitCode = block.checkHitToBlock(ball.getXBall(), ball.getYBall(), Ball.BALL_RADIUS);
-                if (hitCode != Block.NO_HIT) {
-                    setScore(getScore() + 1);
+            if (ball.getYBall() >= Block.getPaddingTop() && ball.getYBall() <= (Block.getHeight() * (getLevel() + 1)) + Block.getPaddingTop()) {
+                for (final Block block : blocks) {
+                    int hitCode = block.checkHitToBlock(ball.getXBall(), ball.getYBall(), Ball.BALL_RADIUS);
+                    if (hitCode != Block.NO_HIT) {
+                        setScore(getScore() + 1);
 
-                    new GameUIController().show(block.x, block.y, 1, main);
+                        new GameUIController().show(block.x, block.y, 1, main);
 
-                    block.rect.setVisible(false);
-                    block.isDestroyed = true;
-                    destroyedBlockCount++;
-                    ball.resetCollisionStates();
+                        block.rect.setVisible(false);
+                        block.isDestroyed = true;
+                        destroyedBlockCount++;
+                        ball.resetCollisionStates();
 
-                    if (block.type == Block.BLOCK_CHOCO) {
-                        final Bonus choco = new Bonus(block.row, block.column);
-                        choco.timeCreated = time;
-                        Platform.runLater(() -> main.root.getChildren().add(choco.choco));
-                        bonuses.add(choco);
-                    }
+                        if (block.type == Block.BLOCK_THREE) {
+                            final Bonus bonus = new Bonus(block.row, block.column, block.type);
+                            bonus.timeCreated = time;
+                            Platform.runLater(() -> main.root.getChildren().add(bonus.choco));
+                            bonuses.add(bonus);
+                        }
 
-                    if (block.type == Block.BLOCK_STAR) {
-                        goldTime = time;
-                        ball.setFill(new ImagePattern(new Image("goldball.png")));
-                        ball.setGoldStatus(true);
-                    }
+                        if (block.type == Block.BLOCK_STAR) {
+                            goldTime = time;
+                            ball.setFill(new ImagePattern(new Image("goldball.png")));
+                            ball.setGoldStatus(true);
+                        }
 
-                    if (block.type == Block.BLOCK_HEART) {
-                        setHeart(getHeart() + 1);
-                    }
+                        if (block.type == Block.BLOCK_HEART) {
+                            setHeart(getHeart() + 1);
+                        }
 
-                    if (hitCode == Block.HIT_RIGHT) {
-                        ball.setCollideToRightBlock(true);
-                    } else if (hitCode == Block.HIT_BOTTOM) {
-                        ball.setCollideToBottomBlock(true);
-                    } else if (hitCode == Block.HIT_LEFT) {
-                        ball.setCollideToLeftBlock(true);
-                    } else if (hitCode == Block.HIT_TOP) {
-                        ball.setCollideToTopBlock(true);
+                        if (block.type == Block.BLOCK_FOUL) {
+                            final Bonus foul = new Bonus(block.row, block.column, block.type);
+                            foul.timeCreated = time;
+                            Platform.runLater(() -> main.root.getChildren().add(foul.choco));
+                            bonuses.add(foul);
+                        }
+
+                        if (hitCode == Block.HIT_RIGHT) {
+                            ball.setCollideToRightBlock(true);
+                        } else if (hitCode == Block.HIT_BOTTOM) {
+                            ball.setCollideToBottomBlock(true);
+                        } else if (hitCode == Block.HIT_LEFT) {
+                            ball.setCollideToLeftBlock(true);
+                        } else if (hitCode == Block.HIT_TOP) {
+                            ball.setCollideToTopBlock(true);
+                        }
+
                     }
 
                 }
-
             }
         }
     }
 
     @Override
     public void onInit() {
+        bgMusic.setGameRunning(true);
+        bgMusic.playMusic(); // To play the music
+
         if (!main.loadFromSave) {
             levelUp(main);
             initializeGameElements();
@@ -281,26 +295,32 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
 
     @Override
     public void performPhysicsCalculations() {
-        ball.updateBallMovement(main, this, paddle);
+        if (engine != null) {
+            ball.updateBallMovement(main, this, paddle);
 
-        if (time - goldTime > 5000) {
-            ball.setFill(new ImagePattern(new Image("ball.png")));
-            ball.setGoldStatus(false);
-        }
-
-        for (Bonus choco : bonuses) {
-            if (choco.y > Main.SCENE_HEIGHT || choco.taken) {
-                continue;
+            if (time - goldTime > 5000) {
+                ball.setFill(new ImagePattern(new Image("ball.png")));
+                ball.setGoldStatus(false);
             }
-            if (choco.y >= paddle.getYPaddle() && choco.y <= paddle.getYPaddle() + paddle.getPaddleHeight() && choco.x >= paddle.getXPaddle() && choco.x <= paddle.getXPaddle() + paddle.getPaddleWidth()) {
-                choco.taken = true;
-                choco.choco.setVisible(false);
-                setScore(getScore() + 3);
-                new GameUIController().show(choco.x, choco.y, 3, main);
-            }
-            choco.y += ((time - choco.timeCreated) / 1000.000) + 1.000;
-        }
 
+            for (Bonus bonus : bonuses) {
+                if (bonus.y > Main.SCENE_HEIGHT || bonus.taken) {
+                    continue;
+                }
+                if (bonus.y >= paddle.getYPaddle() && bonus.y <= paddle.getYPaddle() + paddle.getPaddleHeight() && bonus.x >= paddle.getXPaddle() && bonus.x <= paddle.getXPaddle() + paddle.getPaddleWidth()) {
+                    bonus.taken = true;
+                    bonus.choco.setVisible(false);
+                    if (bonus.getType() == Block.BLOCK_THREE) {
+                        setScore(getScore() + 3);
+                        new GameUIController().show(bonus.x, bonus.y, 3, main);
+                    } else if (bonus.getType() == Block.BLOCK_FOUL) {
+                        setScore(getScore() - 2);
+                        new GameUIController().show(bonus.x, bonus.y, -2, main);
+                    }
+                }
+                bonus.y += ((time - bonus.timeCreated) / 1000.000) + 1.000;
+            }
+        }
     }
 
     @Override
@@ -360,6 +380,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
             // Reset game variables for a fresh start
             engine.stop();
             engine = null;
+            bgMusic.stopMusic();
             main.finalScore = getScore();
             blocks.clear();
             bonuses.clear();

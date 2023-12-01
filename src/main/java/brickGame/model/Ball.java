@@ -181,7 +181,7 @@ public class Ball extends Circle implements Serializable {
             if (!isGoldStatus) {
                 //TODO game-over
                 gameController.setHeart(gameController.getHeart() - 1);
-                new GameUIController().show((double) Main.SCENE_WIDTH / 2, (double) Main.SCENE_HEIGHT / 2, -1, main);
+                new GameUIController().showMessage("Heart -1", main);
 
                 if (gameController.getHeart() == 0) {
                     main.showGameOver();

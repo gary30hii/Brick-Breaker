@@ -6,7 +6,6 @@ import brickGame.model.Ball;
 import brickGame.model.Block;
 import brickGame.model.BlockSerializable;
 import brickGame.model.Paddle;
-import javafx.scene.paint.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +50,7 @@ public class FileController {
         gameController.getBonuses().clear();
 
         for (BlockSerializable ser : loadSave.blocks) {
-            Block newBlock = new Block(ser.row, ser.column, Color.BLUE, ser.type, ser.isDestroyed);
+            Block newBlock = new Block(ser.row, ser.column, ser.type, ser.isDestroyed);
             gameController.getBlocks().add(newBlock);
         }
     }
