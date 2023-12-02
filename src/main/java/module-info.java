@@ -4,6 +4,7 @@ module brickGame {
     requires org.slf4j;
     requires java.desktop;
     requires jlayer;
+    requires javafx.media;
 
     opens brickGame to javafx.fxml;
     exports brickGame;

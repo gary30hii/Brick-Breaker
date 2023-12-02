@@ -183,6 +183,15 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
             case S:
                 new FileController().saveCurrentGameState(main, this, ball, paddle);
                 break;
+            case M:
+                if (bgMusic.isMusicMuted()) {
+                    bgMusic.unMuteMusic();
+                    new GameUIController().showMessage("Muted", main);
+                } else {
+                    bgMusic.muteMusic();
+                    new GameUIController().showMessage("Unmuted", main);
+                }
+                break;
         }
     }
 
@@ -249,6 +258,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
 
                         if (block.type == Block.BLOCK_HEART) {
                             setHeart(getHeart() + 1);
+                            new GameUIController().showMessage("Heart +1", main);
                         }
 
                         if (block.type == Block.BLOCK_FOUL) {
@@ -277,7 +287,6 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
 
     @Override
     public void onInit() {
-        bgMusic.setGameRunning(true);
         bgMusic.playMusic(); // To play the music
 
         if (!main.loadFromSave) {
