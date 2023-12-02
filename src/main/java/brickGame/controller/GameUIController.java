@@ -9,7 +9,7 @@ import javafx.scene.control.Label;
 import javafx.util.Duration;
 
 public class GameUIController {
-
+    
     // Display the score with animation at the specified (x, y) location.
     public void show(double x, double y, int score, Main main) {
         String sign = (score >= 0) ? "+" : "";
@@ -18,7 +18,7 @@ public class GameUIController {
         label.setTranslateX(x);
         label.setTranslateY(y);
 
-        Platform.runLater(() -> main.root.getChildren().add(label));
+        Platform.runLater(() -> main.getRoot().getChildren().add(label));
 
         animateLabel(label, main);
     }
@@ -30,7 +30,7 @@ public class GameUIController {
         label.setTranslateX(220);
         label.setTranslateY(340);
 
-        Platform.runLater(() -> main.root.getChildren().add(label));
+        Platform.runLater(() -> main.getRoot().getChildren().add(label));
 
         animateLabel(label, main);
     }
@@ -47,7 +47,7 @@ public class GameUIController {
         scaleTransition.setToY(5);
 
         SequentialTransition sequentialTransition = new SequentialTransition(scaleTransition, fadeTransition);
-        sequentialTransition.setOnFinished(event -> Platform.runLater(() -> main.root.getChildren().remove((label))));
+        sequentialTransition.setOnFinished(event -> Platform.runLater(() -> main.getRoot().getChildren().remove((label))));
         sequentialTransition.play();
     }
 }

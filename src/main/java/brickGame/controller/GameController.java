@@ -186,10 +186,10 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
             case M:
                 if (bgMusic.isMusicMuted()) {
                     bgMusic.unMuteMusic();
-                    new GameUIController().showMessage("Muted", main);
+                    new GameUIController().showMessage("Unmuted", main);
                 } else {
                     bgMusic.muteMusic();
-                    new GameUIController().showMessage("Unmuted", main);
+                    new GameUIController().showMessage("Muted", main);
                 }
                 break;
         }
@@ -246,7 +246,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
                         if (block.type == Block.BLOCK_THREE) {
                             final Bonus bonus = new Bonus(block.row, block.column, block.type);
                             bonus.timeCreated = time;
-                            Platform.runLater(() -> main.root.getChildren().add(bonus.choco));
+                            Platform.runLater(() -> main.getRoot().getChildren().add(bonus.choco));
                             bonuses.add(bonus);
                         }
 
@@ -264,7 +264,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
                         if (block.type == Block.BLOCK_FOUL) {
                             final Bonus foul = new Bonus(block.row, block.column, block.type);
                             foul.timeCreated = time;
-                            Platform.runLater(() -> main.root.getChildren().add(foul.choco));
+                            Platform.runLater(() -> main.getRoot().getChildren().add(foul.choco));
                             bonuses.add(foul);
                         }
 
@@ -299,7 +299,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
         }
         initializeAndStartGameEngine();
         main.setUpGameUI();
-        main.scene.setOnKeyPressed(this);
+        main.getScene().setOnKeyPressed(this);
     }
 
     @Override
@@ -371,9 +371,9 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
         if (engine != null) {
             initializeGameElements();
             initializeAndStartGameEngine();
-            main.root.getChildren().clear();
+            main.getRoot().getChildren().clear();
             main.setUpGameUI();
-            main.scene.setOnKeyPressed(this);
+            main.getScene().setOnKeyPressed(this);
         }
     }
 

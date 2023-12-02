@@ -3,7 +3,6 @@ module brickGame {
     requires javafx.controls;
     requires org.slf4j;
     requires java.desktop;
-    requires jlayer;
     requires javafx.media;
 
     opens brickGame to javafx.fxml;
