@@ -1,9 +1,11 @@
 package brickGame.model;
 
 
+import javafx.animation.PauseTransition;
 import javafx.scene.image.Image;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 
 import java.io.Serializable;
 
@@ -34,6 +36,7 @@ public class Block implements Serializable {
     public static int BLOCK_STAR = 101;
     public static int BLOCK_HEART = 102;
     public static int BLOCK_FOUL = 103;
+    public static int BLOCK_LOCK = 104;
 
 
 
@@ -61,6 +64,10 @@ public class Block implements Serializable {
         rect.setStroke(javafx.scene.paint.Color.web("#f6c64b"));
         rect.setStrokeWidth(2);
 
+        setBlock();
+    }
+
+    private void setBlock(){
         if (type == BLOCK_THREE || type == BLOCK_FOUL) {
             Image image = new Image("mysterious-block.png");
             ImagePattern pattern = new ImagePattern(image);
@@ -73,12 +80,15 @@ public class Block implements Serializable {
             Image image = new Image("star.png");
             ImagePattern pattern = new ImagePattern(image);
             rect.setFill(pattern);
+        } else if (type == BLOCK_LOCK) {
+            Image image = new Image("lock.png");
+            ImagePattern pattern = new ImagePattern(image);
+            rect.setFill(pattern);
         } else {
             Image image = new Image("normal.png");
             ImagePattern pattern = new ImagePattern(image);
             rect.setFill(pattern);
         }
-
     }
 
     /**
@@ -124,6 +134,15 @@ public class Block implements Serializable {
         }
 
         return NO_HIT;
+    }
+
+    public void changeType(int type) {
+        PauseTransition pause = new PauseTransition(Duration.seconds(0.1));
+        pause.setOnFinished(event -> {
+            this.type = type;
+            setBlock();
+        });
+        pause.play();
     }
 
     public static int getPaddingTop() {

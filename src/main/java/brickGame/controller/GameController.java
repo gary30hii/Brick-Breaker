@@ -37,7 +37,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     private boolean isExistHeartBlock = false;
     private int destroyedBlockCount;
 
-    private final int finalLevel = 18;
+    private final int finalLevel = 30;
     private long time;
     private long goldTime;
 
@@ -123,7 +123,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     // Initialize the game board
     private void initBoard(ArrayList<Block> blocks) {
         for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < getLevel() + 1; j++) {
+            for (int j = 0; j < getLevel()/2 + 1; j++) {
                 int r = new Random().nextInt(500);
                 if (r % 5 == 0) {
                     continue; // Empty block
@@ -147,8 +147,10 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
             }
         } else if (randomValue % 15 == 3) {
             return Block.BLOCK_STAR;
-        } else if (randomValue % 15 == 4 && level > 5) {
+        } else if (randomValue % 15 == 4 && level > 10) {
             return Block.BLOCK_FOUL;
+        } else if (randomValue % 15 == 6 && level > 20) {
+            return Block.BLOCK_LOCK;
         } else {
             return Block.BLOCK_NORMAL;
         }
@@ -163,7 +165,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     private Ball initBall() {
         Random random = new Random();
         int xBall = random.nextInt(Main.SCENE_WIDTH) + 1;
-        int minY = Block.getPaddingTop() + (getLevel() + 1) * Block.getHeight() + Ball.BALL_RADIUS;
+        int minY = Block.getPaddingTop() + (getLevel()/2 + 1) * Block.getHeight() + Ball.BALL_RADIUS;
         int maxY = Main.SCENE_HEIGHT - Ball.BALL_RADIUS;
         int yBall = Math.max(minY, Math.min(random.nextInt(Main.SCENE_HEIGHT - 200) + minY, maxY));
         ball = new Ball(xBall, yBall);
@@ -198,11 +200,11 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     private void levelUp(Main main) {
         setLevel(getLevel() + 1);
 
-        if (getLevel() > 1 && getLevel() != finalLevel) {
+        if (getLevel() > 1 && getLevel() != finalLevel + 1) {
             new GameUIController().showMessage("Level Up :)", main);
         }
 
-        if (getLevel() == finalLevel) {
+        if (getLevel() == finalLevel + 1) {
             score = score + heart * 5;
             resetGameToStart();
             main.showWin();
@@ -225,7 +227,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
                     choco.choco.setY(choco.y);
                 }
 
-                if (destroyedBlockCount == blocks.size() && getLevel() < finalLevel) {
+                if (destroyedBlockCount == blocks.size() && getLevel() < finalLevel + 1) {
                     prepareForNextLevel();
                 }
             });
@@ -234,14 +236,25 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
                 for (final Block block : blocks) {
                     int hitCode = block.checkHitToBlock(ball.getXBall(), ball.getYBall(), Ball.BALL_RADIUS);
                     if (hitCode != Block.NO_HIT) {
-                        setScore(getScore() + 1);
-
-                        new GameUIController().show(block.x, block.y, 1, main);
-
-                        block.rect.setVisible(false);
-                        block.isDestroyed = true;
-                        destroyedBlockCount++;
                         ball.resetCollisionStates();
+
+
+                        if (block.type == Block.BLOCK_LOCK) {
+                            // Change block type to normal when hit
+                            int r = new Random().nextInt(4) + 1;
+                            block.changeType(determineBlockType(r));
+                        }
+
+                        if (block.type != Block.BLOCK_LOCK) {
+                            // Award points for non-lock blocks
+                            setScore(getScore() + 1);
+                            new GameUIController().show(block.x, block.y, 1, main);
+
+                            block.rect.setVisible(false);
+                            block.isDestroyed = true;
+                            destroyedBlockCount++;
+                        }
+
 
                         if (block.type == Block.BLOCK_THREE) {
                             final Bonus bonus = new Bonus(block.row, block.column, block.type);

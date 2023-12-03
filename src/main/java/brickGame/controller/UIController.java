@@ -45,7 +45,7 @@ public class UIController {
         // Casting the root to Pane and adding the circle
         main.setRoot((Pane) gameRoot);
 
-        main.setGameController(new GameController(main, 0, 0, 5));
+        main.setGameController(new GameController(main, 0, 0, 99));
         main.getGameController().onInit();
     }
 
