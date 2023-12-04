@@ -37,6 +37,7 @@ public class Block implements Serializable {
     public static int BLOCK_HEART = 102;
     public static int BLOCK_FOUL = 103;
     public static int BLOCK_LOCK = 104;
+    public static int BLOCK_BALL = 105;
 
 
 
@@ -68,7 +69,7 @@ public class Block implements Serializable {
     }
 
     private void setBlock(){
-        if (type == BLOCK_THREE || type == BLOCK_FOUL) {
+        if (type == BLOCK_THREE || type == BLOCK_FOUL || type == BLOCK_BALL) {
             Image image = new Image("mysterious-block.png");
             ImagePattern pattern = new ImagePattern(image);
             rect.setFill(pattern);

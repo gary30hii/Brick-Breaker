@@ -78,6 +78,7 @@ public class Main extends Application {
     public Scene getScene() {
         return scene;
     }
+
     public Pane getRoot() {
         return root;
     }

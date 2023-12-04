@@ -14,7 +14,7 @@ public class Bonus implements Serializable {
     public double y;
     public long timeCreated;
     public boolean taken = false;
-    private int type;
+    private final int type;
 
     public Bonus(int row, int column, int type) {
         x = (column * (Block.getWidth())) + Block.getPaddingH() + ((double) Block.getWidth() / 2) - 15;
@@ -34,6 +34,8 @@ public class Bonus implements Serializable {
         String url;
         if (type == Block.BLOCK_FOUL){
             url = "bonus3.png";
+        } else if (type == Block.BLOCK_BALL) {
+            url = "bonus4.png";
         } else {
             if (new Random().nextInt(20) % 2 == 0) {
                 url = "bonus1.png";
@@ -48,9 +50,4 @@ public class Bonus implements Serializable {
     public int getType() {
         return type;
     }
-
-    public void setType(int type) {
-        this.type = type;
-    }
-
 }

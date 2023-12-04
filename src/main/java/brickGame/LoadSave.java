@@ -13,6 +13,8 @@ public class LoadSave {
     private final String leaderboardDataPath = "data/leaderboard.mdds";
     // Flags indicating game state
     public boolean isExistHeartBlock;
+    public boolean isExistSplitBall;
+
     public boolean isGoldStatus;
     public boolean goDownBall;
     public boolean goRightBall;
@@ -76,6 +78,7 @@ public class LoadSave {
 
 
             isExistHeartBlock = inputStream.readBoolean();
+            isExistSplitBall = inputStream.readBoolean();
             isGoldStatus = inputStream.readBoolean();
             goDownBall = inputStream.readBoolean();
             goRightBall = inputStream.readBoolean();

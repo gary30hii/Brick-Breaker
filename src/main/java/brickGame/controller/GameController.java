@@ -2,10 +2,7 @@ package brickGame.controller;
 
 import brickGame.Main;
 import brickGame.engine.GameEngine;
-import brickGame.model.Ball;
-import brickGame.model.Block;
-import brickGame.model.Bonus;
-import brickGame.model.Paddle;
+import brickGame.model.*;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.image.Image;
@@ -31,10 +28,13 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     private GameEngine engine;
     private Paddle paddle;
     private Ball ball;
+    private SplitBall splitBall1;
+    private SplitBall splitBall2;
     private final ArrayList<Block> blocks = new ArrayList<>();
     private final ArrayList<Bonus> bonuses = new ArrayList<>();
 
     private boolean isExistHeartBlock = false;
+    private boolean isExistSplitBall = false;
     private int destroyedBlockCount;
 
     private final int finalLevel = 30;
@@ -80,6 +80,10 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
         return isExistHeartBlock;
     }
 
+    public boolean isExistSplitBall() {
+        return isExistSplitBall;
+    }
+
     public int getDestroyedBlockCount() {
         return destroyedBlockCount;
     }
@@ -107,6 +111,9 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     public void setExistHeartBlock(boolean existHeartBlock) {
         isExistHeartBlock = existHeartBlock;
     }
+    public void setExistSplitBall(boolean existSplitBall) {
+        isExistSplitBall = existSplitBall;
+    }
 
     public void setDestroyedBlockCount(int destroyedBlockCount) {
         this.destroyedBlockCount = destroyedBlockCount;
@@ -123,7 +130,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     // Initialize the game board
     private void initBoard(ArrayList<Block> blocks) {
         for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < getLevel()/2 + 1; j++) {
+            for (int j = 0; j < getLevel() / 2 + 1; j++) {
                 int r = new Random().nextInt(500);
                 if (r % 5 == 0) {
                     continue; // Empty block
@@ -147,10 +154,17 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
             }
         } else if (randomValue % 15 == 3) {
             return Block.BLOCK_STAR;
-        } else if (randomValue % 15 == 4 && level > 10) {
+        } else if (randomValue % 15 == 7 && level > 10) {
             return Block.BLOCK_FOUL;
-        } else if (randomValue % 15 == 6 && level > 20) {
+        } else if (randomValue % 15 == 11 && level > 20) {
             return Block.BLOCK_LOCK;
+        } else if (randomValue % 15 == 13 && level > 25) {
+            if (!isExistSplitBall) {
+                isExistSplitBall = true;
+                return Block.BLOCK_BALL;
+            } else {
+                return Block.BLOCK_LOCK;
+            }
         } else {
             return Block.BLOCK_NORMAL;
         }
@@ -165,7 +179,7 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     private Ball initBall() {
         Random random = new Random();
         int xBall = random.nextInt(Main.SCENE_WIDTH) + 1;
-        int minY = Block.getPaddingTop() + (getLevel()/2 + 1) * Block.getHeight() + Ball.BALL_RADIUS;
+        int minY = Block.getPaddingTop() + (getLevel() / 2 + 1) * Block.getHeight() + Ball.BALL_RADIUS;
         int maxY = Main.SCENE_HEIGHT - Ball.BALL_RADIUS;
         int yBall = Math.max(minY, Math.min(random.nextInt(Main.SCENE_HEIGHT - 200) + minY, maxY));
         ball = new Ball(xBall, yBall);
@@ -222,6 +236,14 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
                 paddle.setY(paddle.getYPaddle());
                 ball.setCenterX(ball.getXBall());
                 ball.setCenterY(ball.getYBall());
+                if (splitBall1 != null) {
+                    splitBall1.setCenterX(splitBall1.getXBall());
+                    splitBall1.setCenterY(splitBall1.getYBall());
+                }
+                if (splitBall2 != null) {
+                    splitBall2.setCenterX(splitBall2.getXBall());
+                    splitBall2.setCenterY(splitBall2.getYBall());
+                }
 
                 for (Bonus choco : bonuses) {
                     choco.choco.setY(choco.y);
@@ -232,69 +254,15 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
                 }
             });
 
-            if (ball.getYBall() >= Block.getPaddingTop() && ball.getYBall() <= (Block.getHeight() * (getLevel() + 1)) + Block.getPaddingTop()) {
-                for (final Block block : blocks) {
-                    int hitCode = block.checkHitToBlock(ball.getXBall(), ball.getYBall(), Ball.BALL_RADIUS);
-                    if (hitCode != Block.NO_HIT) {
-                        ball.resetCollisionStates();
-
-
-                        if (block.type == Block.BLOCK_LOCK) {
-                            // Change block type to normal when hit
-                            int r = new Random().nextInt(4) + 1;
-                            block.changeType(determineBlockType(r));
-                        }
-
-                        if (block.type != Block.BLOCK_LOCK) {
-                            // Award points for non-lock blocks
-                            setScore(getScore() + 1);
-                            new GameUIController().show(block.x, block.y, 1, main);
-
-                            block.rect.setVisible(false);
-                            block.isDestroyed = true;
-                            destroyedBlockCount++;
-                        }
-
-
-                        if (block.type == Block.BLOCK_THREE) {
-                            final Bonus bonus = new Bonus(block.row, block.column, block.type);
-                            bonus.timeCreated = time;
-                            Platform.runLater(() -> main.getRoot().getChildren().add(bonus.choco));
-                            bonuses.add(bonus);
-                        }
-
-                        if (block.type == Block.BLOCK_STAR) {
-                            goldTime = time;
-                            ball.setFill(new ImagePattern(new Image("goldball.png")));
-                            ball.setGoldStatus(true);
-                        }
-
-                        if (block.type == Block.BLOCK_HEART) {
-                            setHeart(getHeart() + 1);
-                            new GameUIController().showMessage("Heart +1", main);
-                        }
-
-                        if (block.type == Block.BLOCK_FOUL) {
-                            final Bonus foul = new Bonus(block.row, block.column, block.type);
-                            foul.timeCreated = time;
-                            Platform.runLater(() -> main.getRoot().getChildren().add(foul.choco));
-                            bonuses.add(foul);
-                        }
-
-                        if (hitCode == Block.HIT_RIGHT) {
-                            ball.setCollideToRightBlock(true);
-                        } else if (hitCode == Block.HIT_BOTTOM) {
-                            ball.setCollideToBottomBlock(true);
-                        } else if (hitCode == Block.HIT_LEFT) {
-                            ball.setCollideToLeftBlock(true);
-                        } else if (hitCode == Block.HIT_TOP) {
-                            ball.setCollideToTopBlock(true);
-                        }
-
-                    }
-
-                }
+            ballCollision(ball);
+            ballDisappear();
+            if (splitBall1 != null){
+                ballCollision(splitBall1);
             }
+            if (splitBall2 != null){
+                ballCollision(splitBall2);
+            }
+
         }
     }
 
@@ -319,6 +287,12 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     public void performPhysicsCalculations() {
         if (engine != null) {
             ball.updateBallMovement(main, this, paddle);
+            if (splitBall1 != null) {
+                splitBall1.updateBallMovement(main, this, paddle);
+            }
+            if (splitBall2 != null) {
+                splitBall2.updateBallMovement(main, this, paddle);
+            }
 
             if (time - goldTime > 5000) {
                 ball.setFill(new ImagePattern(new Image("ball.png")));
@@ -338,6 +312,10 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
                     } else if (bonus.getType() == Block.BLOCK_FOUL) {
                         setScore(getScore() - 2);
                         new GameUIController().show(bonus.x, bonus.y, -2, main);
+                    } else if (bonus.getType() == Block.BLOCK_BALL) {
+                        splitBall1 = new SplitBall((int) bonus.x, (int) bonus.y, true);
+                        splitBall2 = new SplitBall((int) bonus.x, (int) bonus.y, false);
+                        Platform.runLater(() -> main.getRoot().getChildren().addAll(splitBall1, splitBall2));
                     }
                 }
                 bonus.y += ((time - bonus.timeCreated) / 1000.000) + 1.000;
@@ -355,10 +333,14 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
         try {
             // Reset variables for the next level
             ball.setVX(1.000);
+            splitBall1 = null;
+            splitBall2 = null;
             engine.stop();
             ball.resetCollisionStates();
             ball.setGoDownBall(true);
             setExistHeartBlock(false);
+            setExistSplitBall(false);
+
             time = 0;
             blocks.clear();
             destroyedBlockCount = 0;
@@ -408,6 +390,8 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
             bonuses.clear();
             ball = null;
             paddle = null;
+            splitBall1 = null;
+            splitBall2 = null;
             destroyedBlockCount = 0;
             time = 0;
             goldTime = 0;
@@ -416,4 +400,83 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
         }
     }
 
+    private void ballDisappear() {
+        if (splitBall1 != null && splitBall1.getYBall() > Main.SCENE_HEIGHT){
+            main.getRoot().getChildren().remove(splitBall1);
+            splitBall1 = null;
+        }
+        if (splitBall2 != null && splitBall2.getYBall() > Main.SCENE_HEIGHT){
+            main.getRoot().getChildren().remove(splitBall2);
+            splitBall2 = null;
+        }
+    }
+
+    private void ballCollision(Ball theBall) {
+        if (theBall.getYBall() >= Block.getPaddingTop() && theBall.getYBall() <= (Block.getHeight() * (getLevel() + 1)) + Block.getPaddingTop()) {
+            for (final Block block : blocks) {
+                int hitCode = block.checkHitToBlock(theBall.getXBall(), theBall.getYBall(), Ball.BALL_RADIUS);
+                if (hitCode != Block.NO_HIT) {
+                    theBall.resetCollisionStates();
+
+                    if (block.type == Block.BLOCK_LOCK) {
+                        // Change block type to normal when hit
+                        int r = new Random().nextInt(4) + 1;
+                        block.changeType(determineBlockType(r));
+                    } else {
+                        // Award points for non-lock blocks
+                        setScore(getScore() + 1);
+                        new GameUIController().show(block.x, block.y, 1, main);
+
+                        block.rect.setVisible(false);
+                        block.isDestroyed = true;
+                        destroyedBlockCount++;
+                    }
+
+                    if (block.type == Block.BLOCK_THREE) {
+                        final Bonus bonus = new Bonus(block.row, block.column, block.type);
+                        bonus.timeCreated = time;
+                        Platform.runLater(() -> main.getRoot().getChildren().add(bonus.choco));
+                        bonuses.add(bonus);
+                    }
+
+                    if (block.type == Block.BLOCK_STAR && theBall == ball) {
+                        goldTime = time;
+                        theBall.setFill(new ImagePattern(new Image("goldball.png")));
+                        theBall.setGoldStatus(true);
+                    }
+
+                    if (block.type == Block.BLOCK_HEART) {
+                        setHeart(getHeart() + 1);
+                        new GameUIController().showMessage("Heart +1", main);
+                    }
+
+                    if (block.type == Block.BLOCK_FOUL) {
+                        final Bonus foul = new Bonus(block.row, block.column, block.type);
+                        foul.timeCreated = time;
+                        Platform.runLater(() -> main.getRoot().getChildren().add(foul.choco));
+                        bonuses.add(foul);
+                    }
+
+                    if (block.type == Block.BLOCK_BALL) {
+                        final Bonus fourBall = new Bonus(block.row, block.column, block.type);
+                        fourBall.timeCreated = time;
+                        Platform.runLater(() -> main.getRoot().getChildren().add(fourBall.choco));
+                        bonuses.add(fourBall);
+                    }
+
+                    if (hitCode == Block.HIT_RIGHT) {
+                        theBall.setCollideToRightBlock(true);
+                    } else if (hitCode == Block.HIT_BOTTOM) {
+                        theBall.setCollideToBottomBlock(true);
+                    } else if (hitCode == Block.HIT_LEFT) {
+                        theBall.setCollideToLeftBlock(true);
+                    } else if (hitCode == Block.HIT_TOP) {
+                        theBall.setCollideToTopBlock(true);
+                    }
+
+                }
+
+            }
+        }
+    }
 }

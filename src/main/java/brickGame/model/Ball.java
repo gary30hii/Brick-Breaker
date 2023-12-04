@@ -200,9 +200,9 @@ public class Ball extends Circle implements Serializable {
                 if (Math.abs(relation) <= 0.3) {
                     vX = Math.abs(relation);
                 } else if (Math.abs(relation) > 0.3 && Math.abs(relation) <= 0.7) {
-                    vX = (Math.abs(relation) * 1.1) + (gameController.getLevel() / 3.500);
+                    vX = (Math.abs(relation) * 1.3) + (gameController.getLevel() / 20.000);
                 } else {
-                    vX = (Math.abs(relation) * 1.3) + (gameController.getLevel() / 3.500);
+                    vX = (Math.abs(relation) * 1.3) + (gameController.getLevel() / 20.000);
                 }
 
                 collideToPaddleAndMoveToRight = getXBall() - (paddle.getXPaddle() + (double) paddle.getPaddleWidth() / 2) > 0;

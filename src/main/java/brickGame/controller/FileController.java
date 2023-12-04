@@ -23,6 +23,7 @@ public class FileController {
         loadSave.readGameData();
         // Load game state from the saved data
         gameController.setExistHeartBlock(loadSave.isExistHeartBlock);
+        gameController.setExistSplitBall(loadSave.isExistSplitBall);
         ball.setGoldStatus(loadSave.isGoldStatus);
         ball.setGoDownBall(loadSave.goDownBall);
         ball.setGoRightBall((loadSave.goRightBall));
@@ -78,6 +79,7 @@ public class FileController {
                 outputStream.writeDouble(ball.getVX());
 
                 outputStream.writeBoolean(gameController.isExistHeartBlock());
+                outputStream.writeBoolean(gameController.isExistSplitBall());
                 outputStream.writeBoolean(ball.isGoldStatus());
                 outputStream.writeBoolean(ball.isGoDownBall());
                 outputStream.writeBoolean(ball.isGoRightBall());
