@@ -472,9 +472,11 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
                     break;
                 case M:
                     if (getBgMusic().isMusicMuted()) {
+                        main.setMuted(false);
                         getBgMusic().unMuteMusic();
                         new GameUIController().showMessage("Unmuted", getMain());
                     } else {
+                        main.setMuted(true);
                         getBgMusic().muteMusic();
                         new GameUIController().showMessage("Muted", getMain());
                     }
@@ -551,6 +553,9 @@ public class GameController implements EventHandler<KeyEvent>, GameEngine.OnActi
     @Override
     public void onInit() {
         getBgMusic().playMusic(); // To play the music
+        if(main.isMuted()){
+            getBgMusic().muteMusic();
+        }
 
         if (!getMain().loadFromSave) {
             levelUp(getMain());

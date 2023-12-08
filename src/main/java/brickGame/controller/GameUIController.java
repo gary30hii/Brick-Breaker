@@ -8,9 +8,19 @@ import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.util.Duration;
 
+/**
+ * Controller class for game UI animations. It provides functionality to display animated labels for scores and messages.
+ */
 public class GameUIController {
-    
-    // Display the score with animation at the specified (x, y) location.
+
+    /**
+     * Displays the score with an animation at a specified location on the screen.
+     *
+     * @param x     The X coordinate where the label should appear.
+     * @param y     The Y coordinate where the label should appear.
+     * @param score The score to display. Positive scores are prefixed with a plus sign.
+     * @param main  The reference to the main application class, used to access the root pane for displaying the label.
+     */
     public void show(double x, double y, int score, Main main) {
         String sign = (score >= 0) ? "+" : "";
         Label label = new Label(sign + score);
@@ -23,7 +33,12 @@ public class GameUIController {
         animateLabel(label, main);
     }
 
-    // Display a message with animation at a fixed position.
+    /**
+     * Displays a message with an animation at a fixed central position on the screen.
+     *
+     * @param message The message to display in the label.
+     * @param main    The reference to the main application class, used to access the root pane for displaying the label.
+     */
     public void showMessage(String message, Main main) {
         final Label label = new Label(message);
         label.getStyleClass().add("game-message");
@@ -35,7 +50,12 @@ public class GameUIController {
         animateLabel(label, main);
     }
 
-    //this method combines both opacity (fade-in/fade-out) and scaling animations to create a visually pleasing effect for the Label, and it handles the removal of the label after the animation is complete
+    /**
+     * Animates a given label with a combination of scaling and fading transitions. The label is removed from the root pane after the animation completes.
+     *
+     * @param label The label to animate.
+     * @param main  The reference to the main application class, used to access the root pane for removing the label after animation.
+     */
     private void animateLabel(Label label, Main main) {
         FadeTransition fadeTransition = new FadeTransition(Duration.millis(300), label);
         ScaleTransition scaleTransition = new ScaleTransition(Duration.millis(300), label);
