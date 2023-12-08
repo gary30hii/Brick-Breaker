@@ -30,6 +30,7 @@ public class Main extends Application {
     private Scene scene;
     private Pane root;
     private FXMLLoader loader;
+    private boolean muted = false;
 
     // Game variables
     private GameController gameController;
@@ -163,6 +164,15 @@ public class Main extends Application {
     }
 
     /**
+     * Checks if the music is currently muted.
+     *
+     * @return True if the music is muted, false otherwise.
+     */
+    public boolean isMuted() {
+        return muted;
+    }
+
+    /**
      * Sets the GameController instance for this application.
      *
      * @param gameController The GameController to be set.
@@ -205,5 +215,14 @@ public class Main extends Application {
      */
     public void setFinalScore(int finalScore) {
         this.finalScore = finalScore;
+    }
+
+    /**
+     * Sets the muted state of the music.
+     *
+     * @param muted True to mute the music, false to unmute.
+     */
+    public void setMuted(boolean muted) {
+        this.muted = muted;
     }
 }

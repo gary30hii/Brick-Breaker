@@ -121,4 +121,17 @@
     -fx-background-radius: 25 25 0 0px;
 }
 
-
+.volume-button {
+    -fx-min-width: 66px;
+    -fx-max-width: 66px;
+    -fx-min-height: 35px;
+    -fx-max-height: 35px;
+    -fx-background-color: #3071a9; /* Primary color for the button */
+    -fx-background-radius: 5; /* Rounded corners */
+    -fx-text-fill: white; /* Text color */
+    -fx-font-weight: bold; /* Make the text bold */
+    -fx-border-width: 2px; /* Border width */
+    -fx-border-color: #205081; /* Border color */
+    -fx-border-radius: 5; /* Border corner radius */
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 3, 0.0 , 0 , 1 ); /* Shadow effect */
+}
