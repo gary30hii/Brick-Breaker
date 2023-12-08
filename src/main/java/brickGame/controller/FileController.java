@@ -14,57 +14,96 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 
+/**
+ * The FileController class is responsible for handling file operations related to saving and loading
+ * the game state and leaderboard data. It includes methods for serialization and deserialization of game data.
+ */
 public class FileController {
     private static final Logger logger = LoggerFactory.getLogger(FileController.class);
     private final LoadSave loadSave = new LoadSave();
-    // Load a saved game state
+
+    /**
+     * Retrieves the logger instance for the FileController class.
+     *
+     * @return The Logger instance.
+     */
+    public static Logger getLogger() {
+        return logger;
+    }
+
+    /**
+     * Retrieves the LoadSave instance used for managing game data serialization and deserialization.
+     *
+     * @return The LoadSave instance.
+     */
+    public LoadSave getLoadSave() {
+        return loadSave;
+    }
+
+    /**
+     * Loads the saved game state from a file and updates the gameController, ball, and paddle with the loaded data.
+     *
+     * @param gameController The game controller to be updated with the loaded data.
+     * @param ball The ball object to be updated with the loaded data.
+     * @param paddle The paddle object to be updated with the loaded data.
+     */
     public void loadSavedGameState(GameController gameController, Ball ball, Paddle paddle) {
 
-        loadSave.readGameData();
-        // Load game state from the saved data
-        gameController.setExistHeartBlock(loadSave.isExistHeartBlock);
-        gameController.setExistSplitBall(loadSave.isExistSplitBall);
-        ball.setGoldStatus(loadSave.isGoldStatus);
-        ball.setGoDownBall(loadSave.goDownBall);
-        ball.setGoRightBall((loadSave.goRightBall));
-        ball.setCollideToPaddle(loadSave.collideToPaddle);
-        ball.setCollideToPaddleAndMoveToRight(loadSave.collideToPaddleAndMoveToRight);
-        ball.setCollideToRightWall(loadSave.collideToRightWall);
-        ball.setCollideToLeftWall(loadSave.collideToLeftWall);
-        ball.setCollideToRightBlock(loadSave.collideToRightBlock);
-        ball.setCollideToBottomBlock(loadSave.collideToBottomBlock);
-        ball.setCollideToLeftBlock(loadSave.collideToLeftBlock);
-        ball.setCollideToTopBlock(loadSave.collideToTopBlock);
-        gameController.setLevel(loadSave.level);
-        gameController.setScore(loadSave.score);
-        gameController.setHeart(loadSave.heart);
-        gameController.setDestroyedBlockCount(loadSave.destroyedBlockCount);
-        ball.setXBall(loadSave.xBall);
-        ball.setYBall(loadSave.yBall);
-        paddle.setXPaddle(loadSave.xPaddle);
-        paddle.setYPaddle(loadSave.yPaddle);
-        gameController.setTime(loadSave.time);
-        gameController.setGoldTime(loadSave.goldTime);
-        ball.setVX(loadSave.vX);
+        getLoadSave().readGameData(); // Load game data from storage.
 
+        // Update the game state based on loaded data
+        gameController.setExistHeartBlock(getLoadSave().isExistHeartBlock());
+        gameController.setExistSplitBall(getLoadSave().isExistSplitBall());
+        ball.setGoldStatus(getLoadSave().isGoldStatus());
+        ball.setGoDownBall(getLoadSave().isGoDownBall());
+        ball.setGoRightBall((getLoadSave().isGoRightBall()));
+        ball.setCollideToPaddle(getLoadSave().isCollideToPaddle());
+        ball.setCollideToPaddleAndMoveToRight(getLoadSave().isCollideToPaddleAndMoveToRight());
+        ball.setCollideToRightWall(getLoadSave().isCollideToRightWall());
+        ball.setCollideToLeftWall(getLoadSave().isCollideToLeftWall());
+        ball.setCollideToRightBlock(getLoadSave().isCollideToRightBlock());
+        ball.setCollideToBottomBlock(getLoadSave().isCollideToBottomBlock());
+        ball.setCollideToLeftBlock(getLoadSave().isCollideToLeftBlock());
+        ball.setCollideToTopBlock(getLoadSave().isCollideToTopBlock());
+        gameController.setLevel(getLoadSave().getLevel());
+        gameController.setScore(getLoadSave().getScore());
+        gameController.setHeart(getLoadSave().getHeart());
+        gameController.setDestroyedBlockCount(getLoadSave().getDestroyedBlockCount());
+        ball.setXBall(getLoadSave().getXBall());
+        ball.setYBall(getLoadSave().getYBall());
+        paddle.setXPaddle(getLoadSave().getXPaddle());
+        paddle.setYPaddle(getLoadSave().getYPaddle());
+        gameController.setTime(getLoadSave().getTime());
+        gameController.setGoldTime(getLoadSave().getGoldTime());
+        ball.setVX(getLoadSave().getVX());
+
+        // Clear existing game objects and reload from saved data
         gameController.getBlocks().clear();
         gameController.getBonuses().clear();
 
-        for (BlockSerializable ser : loadSave.blocks) {
+        for (BlockSerializable ser : getLoadSave().getBlocks()) {
             Block newBlock = new Block(ser.row, ser.column, ser.type, ser.isDestroyed);
             gameController.getBlocks().add(newBlock);
         }
     }
 
-    // Save the game state to a file
+    /**
+     * Saves the current game state to a file asynchronously. This includes game progression data and the states of game objects.
+     *
+     * @param main The main class instance of the application.
+     * @param gameController The game controller containing the current game state.
+     * @param ball The ball object with its current state.
+     * @param paddle The paddle object with its current state.
+     */
     public void saveCurrentGameState(Main main, GameController gameController, Ball ball, Paddle paddle) {
         new Thread(() -> {
-            new File(loadSave.getSavePathDir());
-            File file = new File(loadSave.getGameDataPath());
+            new File(getLoadSave().getSavePathDir()); // Consider checking if directory creation is required here.
+            File file = new File(getLoadSave().getGameDataPath());
             ObjectOutputStream outputStream = null;
             try {
                 outputStream = new ObjectOutputStream(new FileOutputStream(file));
 
+                // Write game state to file
                 outputStream.writeInt(gameController.getLevel());
                 outputStream.writeInt(gameController.getScore());
                 outputStream.writeInt(gameController.getHeart());
@@ -104,41 +143,47 @@ public class FileController {
                 new GameUIController().showMessage("Game Saved", main);
 
             } catch (IOException e) {
-                logger.error("An error occurred in saveCurrentGameState() Method: " + e.getMessage(), e);
+                getLogger().error("An error occurred in saveCurrentGameState() Method: " + e.getMessage(), e);
             } finally {
                 try {
+                    // Close the stream safely
                     if (outputStream != null) {
                         outputStream.flush(); // Check for null before calling flush
                         outputStream.close();
                     }
                 } catch (IOException e) {
-                    logger.error("An error occurred in saveCurrentGameState() Method: " + e.getMessage(), e);
+                    getLogger().error("An error occurred in saveCurrentGameState() Method: " + e.getMessage(), e);
                 }
             }
-        }).start();
+        }).start(); // Start the thread to save the game state.
 
     }
 
+    /**
+     * Saves the leaderboard data to a file, updating the top three scores with a new score if applicable.
+     *
+     * @param newScore The new score to be considered for the leaderboard.
+     */
     public void saveLeaderboard(int newScore) {
         // Ensure the directory exists
-        File directory = new File(loadSave.getSavePathDir());
+        File directory = new File(getLoadSave().getSavePathDir());
         if (!directory.exists()) {
             boolean isDirCreated = directory.mkdirs();
             if (!isDirCreated) {
-                logger.error("Failed to create directory: " + directory.getPath());
+                getLogger().error("Failed to create directory: " + directory.getPath());
                 return; // Exit the method if the directory cannot be created
             }
         }
 
-        File file = new File(loadSave.getLeaderboardDataPath());
+        File file = new File(getLoadSave().getLeaderboardDataPath());
         ObjectOutputStream outputStream = null;
 
         try {
-            loadSave.readLeaderboard();
+            getLoadSave().readLeaderboard();
             // Load current high scores
-            int highest = loadSave.bestScore;
-            int secondHigh = loadSave.secondBestScore;
-            int thirdHigh = loadSave.thirdBestScore;
+            int highest = getLoadSave().getBestScore();
+            int secondHigh = getLoadSave().getSecondBestScore();
+            int thirdHigh = getLoadSave().getThirdBestScore();
 
             // Compare and update scores
             if (newScore > highest) {
@@ -158,16 +203,18 @@ public class FileController {
             outputStream.writeInt(secondHigh);
             outputStream.writeInt(thirdHigh);
         } catch (IOException e) {
-            logger.error("An error occurred in saveLeaderboard() Method: " + e.getMessage(), e);
+            getLogger().error("An error occurred in saveLeaderboard() Method: " + e.getMessage(), e);
         } finally {
+            // Close the stream safely
             if (outputStream != null) {
                 try {
                     outputStream.close();
                 } catch (IOException e) {
-                    logger.error("An error occurred while closing stream in saveLeaderboard(): " + e.getMessage(), e);
+                    getLogger().error("An error occurred while closing stream in saveLeaderboard(): " + e.getMessage(), e);
                 }
             }
         }
     }
+
 
 }
