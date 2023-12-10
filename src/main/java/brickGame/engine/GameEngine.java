@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * The GameEngine class manages the game loop, including frame updates, physics calculations,
  * and time tracking. It uses an executor service to handle tasks concurrently.
  */
-public class GameEngine {
+public class GameEngine{
 
     private static final Logger logger = LoggerFactory.getLogger(GameEngine.class);
 
@@ -145,17 +145,4 @@ public class GameEngine {
         }
     }
 
-    /**
-     * The OnAction interface defines methods for updating game frames, initializing the game,
-     * performing physics calculations, and handling time updates.
-     */
-    public interface OnAction {
-        void updateGameFrame();
-
-        void onInit();
-
-        void performPhysicsCalculations();
-
-        void onTime(long time);
-    }
 }

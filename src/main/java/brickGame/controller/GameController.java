@@ -1,7 +1,7 @@
 package brickGame.controller;
 
 import brickGame.Main;
-import brickGame.engine.GameEngine;
+import brickGame.engine.*;
 import brickGame.model.*;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -18,7 +18,7 @@ import java.util.Random;
  * Main controller for the game, handling game logic and events.
  * Implements EventHandler for keyboard inputs and GameEngine.OnAction for game actions.
  */
-public class GameController implements EventHandler<KeyEvent>, GameEngine.OnAction {
+public class GameController implements EventHandler<KeyEvent>, OnAction {
     private static final Logger logger = LoggerFactory.getLogger(GameController.class);
 
     // Constants for direction
