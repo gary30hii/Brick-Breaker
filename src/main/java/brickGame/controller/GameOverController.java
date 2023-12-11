@@ -1,6 +1,6 @@
 package brickGame.controller;
 
-import brickGame.LoadSave;
+import brickGame.model.LoadSave;
 import brickGame.Main;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;

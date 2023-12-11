@@ -1,6 +1,5 @@
-package brickGame;
+package brickGame.model;
 
-import brickGame.model.BlockSerializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

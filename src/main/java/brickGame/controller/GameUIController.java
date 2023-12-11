@@ -57,8 +57,8 @@ public class GameUIController {
      * @param main  The reference to the main application class, used to access the root pane for removing the label after animation.
      */
     private void animateLabel(Label label, Main main) {
-        FadeTransition fadeTransition = new FadeTransition(Duration.millis(300), label);
-        ScaleTransition scaleTransition = new ScaleTransition(Duration.millis(300), label);
+        FadeTransition fadeTransition = new FadeTransition(Duration.millis(1000), label);
+        ScaleTransition scaleTransition = new ScaleTransition(Duration.millis(1000), label);
 
         fadeTransition.setFromValue(1.0);
         fadeTransition.setToValue(0.0);

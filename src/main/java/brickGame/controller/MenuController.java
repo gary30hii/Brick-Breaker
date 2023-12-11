@@ -32,12 +32,12 @@ public class MenuController {
      * @param mainApp The main application instance to be used by the menu controller.
      */
     public void setMainApp(Main mainApp) {
+        this.mainApp = mainApp;
         menuMusic.playMusic();
         if (mainApp.isMuted()) {
             menuMusic.muteMusic();
         }
         updateButtonVisibility();
-        this.mainApp = mainApp;
     }
 
     /**

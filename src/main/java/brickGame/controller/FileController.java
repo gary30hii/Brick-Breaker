@@ -1,6 +1,6 @@
 package brickGame.controller;
 
-import brickGame.LoadSave;
+import brickGame.model.LoadSave;
 import brickGame.Main;
 import brickGame.model.Ball;
 import brickGame.model.Block;
