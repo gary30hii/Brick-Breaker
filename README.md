@@ -207,10 +207,6 @@ Maven > Reload Project.
 3. Apply and save changes.
 
 ### 2.7 Compiling and Running the Project
-
-- **IntelliJ IDEA:**
-    1. Open Main.java.
-    2. Run the project using the run icon or Shift + F10.
 - **Maven Command:**
     1. Open Terminal in IntelliJ.
     2. Execute: mvn clean javafx:run.
