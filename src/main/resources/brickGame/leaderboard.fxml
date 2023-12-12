@@ -37,4 +37,6 @@
          <Font name="Al Tarikh Regular" size="65.0" />
       </font>
    </Label>
+   <Button fx:id="unmuteButton" layoutX="420.0" layoutY="14.0" mnemonicParsing="false" onAction="#unmuteAction" styleClass="volume-button" text="Unmute" />
+   <Button fx:id="muteButton" layoutX="420.0" layoutY="14.0" mnemonicParsing="false" onAction="#muteAction" prefHeight="26.0" prefWidth="61.0" styleClass="volume-button" text="Mute" />
 </Pane>

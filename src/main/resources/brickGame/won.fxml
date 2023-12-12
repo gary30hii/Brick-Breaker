@@ -27,4 +27,6 @@
             </font>
         </Label>
     </Pane>
+   <Button fx:id="muteButton" layoutX="420.0" layoutY="14.0" mnemonicParsing="false" onAction="#muteAction" prefHeight="35.0" prefWidth="66.0" styleClass="volume-button" text="Mute" />
+   <Button fx:id="unmuteButton" layoutX="420.0" layoutY="14.0" mnemonicParsing="false" onAction="#unmuteAction" prefHeight="35.0" prefWidth="66.0" styleClass="volume-button" text="Unmute" />
 </Pane>

@@ -1,150 +1,228 @@
 package brickGame;
 
-import brickGame.controller.*;
-import brickGame.model.Block;
+import brickGame.controller.GameController;
+import brickGame.controller.UIController;
+import brickGame.controller.GameLabelController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+/**
+ * The Main class of the brick game application. This class extends the JavaFX Application class
+ * and is responsible for initializing and launching the game's UI and managing the game's state.
+ * It includes methods for scene transitions and updating game data.
+ */
+
 public class Main extends Application {
 
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
-
-    // Constants
+    // Constants for scene dimensions.
     public static final int SCENE_WIDTH = 500, SCENE_HEIGHT = 700;
 
-    //UI variable
-    private Label scoreLabel;
-    private Label heartLabel;
-    public Scene scene;
-    public Pane root;
+    // Controller instances.
+    private final UIController UIController = new UIController(this);
+    private final GameLabelController gameLabelController = new GameLabelController(this);
+
+    // UI components.
+    private Scene scene;
+    private Pane root;
     private FXMLLoader loader;
+    private boolean muted = false;
 
     // Game variables
     private GameController gameController;
     public boolean loadFromSave;
-    public int finalScore = 0;
+    private int finalScore = 0;
 
-    // Initialize UI elements
+
+    /**
+     * Initializes the UI elements and starts the primary stage of the application.
+     *
+     * @param primaryStage The primary stage for this application, onto which the application scene can be set.
+     * @throws IOException If an I/O error occurs during loading the FXML file for the UI.
+     */
     @Override
     public void start(Stage primaryStage) throws IOException {
-        loader = new FXMLLoader(getClass().getResource("menu.fxml"));
-        root = loader.load();
-
-        MenuController menuController = loader.getController(); // Get the controller instance
-        menuController.setMainApp(this);
-
-        primaryStage.setTitle("Brick Breaker");
-        scene = new Scene(root);
-        scene.getStylesheets().add("style.css");
-
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        UIController.start(primaryStage);
     }
 
-    public void switchToGameScene() throws IOException {
-        // Logic to switch to the game scene
-        loader = new FXMLLoader(getClass().getResource("game.fxml"));
-        Parent gameRoot = loader.load();
-        scene.setRoot(gameRoot);
-        scene.setOnKeyPressed(gameController);
-
-        // Casting the root to Pane and adding the circle
-        root = (Pane) gameRoot;
-
-        gameController = new GameController(this, 0, 0, 5);
-        gameController.onInit();
-    }
-
-    // Main method to launch the application
+    /**
+     * The main method that launches the JavaFX application.
+     *
+     * @param args Command line arguments passed to the application.
+     */
     public static void main(String[] args) {
         launch(args);
     }
 
-    public void updateGameData(int score, int heart){
-        scoreLabel.setText("Score: " + score);
-        heartLabel.setText("Heart : " + heart);
+    /**
+     * Updates the game data, specifically the score and heart count.
+     *
+     * @param score The current score to update.
+     * @param heart The current heart count to update.
+     */
+    public void updateGameData(int score, int heart) {
+        gameLabelController.updateGameData(score, heart);
     }
 
+    /**
+     * Sets up the game UI, preparing it for gameplay.
+     */
     public void setUpGameUI() {
-        scoreLabel = new Label("Score: " + gameController.getScore());
-        Label levelLabel = new Label("Level: " + gameController.getLevel());
-        heartLabel = new Label("Heart : " + gameController.getHeart());
-
-        // Add a style class to each label
-        scoreLabel.getStyleClass().add("label-style");
-        levelLabel.getStyleClass().add("label-style");
-        heartLabel.getStyleClass().add("label-style");
-
-        scoreLabel.setTranslateX(45);
-        scoreLabel.setTranslateY(5);
-        levelLabel.setTranslateX(45);
-        levelLabel.setTranslateY(25);
-        heartLabel.setTranslateX(380);
-        heartLabel.setTranslateY(5);
-
-        root.getChildren().addAll(gameController.getPaddle(), gameController.getBall(), scoreLabel, heartLabel, levelLabel);
-
-        for (Block block : gameController.getBlocks()) {
-            if (block.rect != null && !block.isDestroyed) {
-                root.getChildren().add(block.rect);
-            }
-        }
+        gameLabelController.setUpGameUI();
     }
 
+    /**
+     * Switches the current scene to the game scene.
+     *
+     * @throws IOException If an error occurs during loading the game scene FXML.
+     */
+    public void switchToGameScene() throws IOException {
+        UIController.switchToGameScene();
+    }
+
+    /**
+     * Displays the win screen UI.
+     */
     public void showWin() {
-        try {
-            gameController = null;
-            new FileController().saveLeaderboard(finalScore);
-            loader = new FXMLLoader(getClass().getResource("won.fxml"));
-            Parent gameRoot = loader.load();
-            WonController wonController = loader.getController(); // Get the controller instance
-            wonController.setMainApp(this, finalScore);
-            scene.setRoot(gameRoot);
-        } catch (IOException e) {
-            // Log the exception details or handle it appropriately
-            logger.error("An error occurred in showWin() method: " + e.getMessage(), e);
-        }
+        UIController.showWin();
     }
 
+    /**
+     * Displays the game over screen UI.
+     */
     public void showGameOver() {
-        try {
-            gameController.resetGameToStart();
-            gameController = null;
-            new FileController().saveLeaderboard(finalScore);
-            loader = new FXMLLoader(getClass().getResource("gameover.fxml"));
-            Parent gameRoot = loader.load();
-            GameOverController gameOverController = loader.getController(); // Get the controller instance
-            gameOverController.setMainApp(this, finalScore);
-            scene.setRoot(gameRoot);
-        } catch (IOException e) {
-            // Log the exception details or handle it appropriately
-            logger.error("An error occurred in showGameOver() method: " + e.getMessage(), e);
-        }
+        UIController.showGameOver();
     }
 
+    /**
+     * Switches the current scene to the leaderboard scene.
+     *
+     * @throws IOException If an error occurs during loading the leaderboard scene FXML.
+     */
     public void switchToLeaderboard() throws IOException {
-        loader = new FXMLLoader(getClass().getResource("leaderboard.fxml"));
-        Parent gameRoot = loader.load();
-        LeaderboardController leaderboardController = loader.getController(); // Get the controller instance
-        leaderboardController.setMainApp(this);
-        scene.setRoot(gameRoot);
+        UIController.switchToLeaderboard();
     }
 
-
+    /**
+     * Switches the current scene to the menu scene.
+     *
+     * @throws IOException If an error occurs during loading the menu scene FXML.
+     */
     public void switchToMenu() throws IOException {
-        loader = new FXMLLoader(getClass().getResource("menu.fxml"));
-        Parent gameRoot = loader.load();
-        MenuController menuController = loader.getController(); // Get the controller instance
-        menuController.setMainApp(this);
-        scene.setRoot(gameRoot);
+        UIController.switchToMenu();
+    }
+
+    // Getter and setter methods.
+
+    /**
+     * Retrieves the GameController instance associated with this application.
+     *
+     * @return The GameController object managing game logic and state.
+     */
+    public GameController getGameController() {
+        return gameController;
+    }
+
+    /**
+     * Retrieves the FXMLLoader instance used for loading FXML resources.
+     *
+     * @return The FXMLLoader used for UI scene transitions.
+     */
+    public FXMLLoader getLoader() {
+        return loader;
+    }
+
+    /**
+     * Retrieves the current Scene of the application.
+     *
+     * @return The current Scene object displayed in the Stage.
+     */
+    public Scene getScene() {
+        return scene;
+    }
+
+    /**
+     * Retrieves the root Pane of the current Scene.
+     *
+     * @return The root Pane of the current Scene.
+     */
+    public Pane getRoot() {
+        return root;
+    }
+
+    /**
+     * Retrieves the final score of the game.
+     *
+     * @return The final score achieved in the game.
+     */
+    public int getFinalScore() {
+        return finalScore;
+    }
+
+    /**
+     * Checks if the music is currently muted.
+     *
+     * @return True if the music is muted, false otherwise.
+     */
+    public boolean isMuted() {
+        return muted;
+    }
+
+    /**
+     * Sets the GameController instance for this application.
+     *
+     * @param gameController The GameController to be set.
+     */
+    public void setGameController(GameController gameController) {
+        this.gameController = gameController;
+    }
+
+    /**
+     * Sets the FXMLLoader instance for this application.
+     *
+     * @param loader The FXMLLoader to be set for loading FXML resources.
+     */
+    public void setLoader(FXMLLoader loader) {
+        this.loader = loader;
+    }
+
+    /**
+     * Sets the Scene for the application.
+     *
+     * @param scene The Scene to be displayed in the Stage.
+     */
+    public void setScene(Scene scene) {
+        this.scene = scene;
+    }
+
+    /**
+     * Sets the root Pane for the current Scene.
+     *
+     * @param root The root Pane to be set for the Scene.
+     */
+    public void setRoot(Pane root) {
+        this.root = root;
+    }
+
+    /**
+     * Sets the final score of the game.
+     *
+     * @param finalScore The final score to be set for the game.
+     */
+    public void setFinalScore(int finalScore) {
+        this.finalScore = finalScore;
+    }
+
+    /**
+     * Sets the muted state of the music.
+     *
+     * @param muted True to mute the music, false to unmute.
+     */
+    public void setMuted(boolean muted) {
+        this.muted = muted;
     }
 }
