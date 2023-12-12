@@ -198,13 +198,8 @@ Maven > Reload Project.
 
 ### 2.6 Manual JavaFX Configuration (If Needed)
 
-1. **Configure JavaFX:**
-    - In Project Structure, add JavaFX SDK's lib folder as a library.
-2. **VM Options:**
-    - Go to Run > Edit Configurations.
-    - Add VM options: --module-path /path/to/javafx/sdk/lib --add-modules javafx.controls,javafx.fxml.
-    - Replace /path/to/javafx/sdk with your JavaFX SDK path.
-3. Apply and save changes.
+1. Maven should automatically start downloading the required dependencies specified in your pom.xml file.
+2. If it doesn’t, go to the 'Maven' tab on the right-hand side and click on the 'Reload All Maven Projects' icon.
 
 ### 2.7 Compiling and Running the Project
 - **Maven Command:**
