@@ -1,4 +1,3 @@
-# COMP2042_CW_hcygh2
 
 # Brick Breaker
 
